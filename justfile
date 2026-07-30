@@ -44,6 +44,24 @@ build-web:
 build-app app:
     npm run build --workspace {{app}}
 
+# --- Tauri bundling -----------------------------------------------------------
+# The shared tauri.base.json (publisher/category/targets/build commands) is merged in via
+# `--config` on every bundle/dev. This is the sanctioned path — building a Tauri app WITHOUT
+# the base (e.g. bare `npm run tauri build`) omits that metadata. Applies to the three Tauri
+# apps only; image-shutter bundles via cargo-packager (see `package-egui`).
+
+# Bundle a Tauri app with the base config merged in, e.g. `just bundle data-framer`.
+bundle app:
+    cd apps/{{app}} && npm run tauri -- build --config ../../tauri.base.json
+
+# Run a Tauri app in dev with the base config merged in.
+tauri-dev app:
+    cd apps/{{app}} && npm run tauri -- dev --config ../../tauri.base.json
+
+# Bundle the egui app (image-shutter) via cargo-packager (needs `cargo install cargo-packager`).
+package-egui:
+    cd apps/image-shutter && cargo packager --release
+
 # --- Meta ---------------------------------------------------------------------
 
 # Verify the workspace resolves (Phase 1 gate).

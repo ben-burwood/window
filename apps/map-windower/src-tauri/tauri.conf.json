@@ -4,9 +4,6 @@
   "version": "../package.json",
   "identifier": "com.map-windower.app",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -18,7 +15,6 @@
       }
     ],
     "security": {
-      "csp": null,
       "assetProtocol": {
         "enable": true,
         "scope": ["**"]
@@ -26,8 +22,6 @@
     }
   },
   "bundle": {
-    "active": true,
-    "targets": "all",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -36,24 +30,9 @@
       "icons/icon.ico"
     ],
     "fileAssociations": [
-      {
-        "ext": ["geojson"],
-        "name": "GeoJSON",
-        "description": "GeoJSON",
-        "role": "Viewer"
-      },
-      {
-        "ext": ["pmtiles"],
-        "name": "PMTiles",
-        "description": "PMTiles map archive",
-        "role": "Viewer"
-      },
-      {
-        "ext": ["geoparquet"],
-        "name": "GeoParquet",
-        "description": "GeoParquet vector data",
-        "role": "Viewer"
-      }
+      { "ext": ["geojson"], "name": "GeoJSON", "description": "GeoJSON", "role": "Viewer" },
+      { "ext": ["pmtiles"], "name": "PMTiles", "description": "PMTiles map archive", "role": "Viewer" },
+      { "ext": ["geoparquet"], "name": "GeoParquet", "description": "GeoParquet vector data", "role": "Viewer" }
     ]
   }
 }
