@@ -44,7 +44,11 @@ fn get_rows(
     let (file_path, unfiltered_rows, schema) = {
         let guard = state.file.lock().unwrap();
         let loaded = guard.as_ref().ok_or("No file loaded")?;
-        (loaded.path.clone(), loaded.total_rows, loaded.schema.clone())
+        (
+            loaded.path.clone(),
+            loaded.total_rows,
+            loaded.schema.clone(),
+        )
     };
 
     let lf = datastore::build_pipeline(
@@ -69,13 +73,19 @@ fn get_rows(
         .collect()
         .map_err(|e| e.to_string())?;
 
-    Ok(RowsResponse { rows: datastore::frame_to_rows(&df), total_rows })
+    Ok(RowsResponse {
+        rows: datastore::frame_to_rows(&df),
+        total_rows,
+    })
 }
 
 /// Return all lat/lon coordinate pairs that pass the active filters and optional bounding box.
 /// When `min_lat`/`max_lat`/`min_lon`/`max_lon` are all Some, only rows within that bbox
 /// are returned. When all are None the full (filtered) dataset is returned so the frontend
 /// can compute a fit-bounds extent on first load.
+// A Tauri command whose parameters map 1:1 to a frontend call; bundling them into a struct
+// would only move the shape into the bridge without simplifying anything.
+#[allow(clippy::too_many_arguments)]
 #[tauri::command]
 fn get_map_points(
     lat_col: String,
@@ -172,7 +182,9 @@ fn export_file(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     viewer_tauri::app(&["csv", "parquet"])
-        .manage(AppState { file: Mutex::new(None) })
+        .manage(AppState {
+            file: Mutex::new(None),
+        })
         .invoke_handler(tauri::generate_handler![
             load_file,
             get_rows,

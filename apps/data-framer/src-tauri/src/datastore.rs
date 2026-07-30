@@ -93,13 +93,11 @@ pub const ROW_IDX: &str = "__row_idx";
 /// Build a LazyFrame from a file path. Supports .parquet and .csv.
 pub fn scan_file(path: &str) -> Result<LazyFrame, String> {
     match file_ext(path).as_str() {
-        "parquet" => {
-            LazyFrame::scan_parquet(path.into(), ScanArgsParquet::default())
-                .map_err(|e| e.to_string())
-        }
-        "csv" => {
-            LazyCsvReader::new(path.into()).finish().map_err(|e| e.to_string())
-        }
+        "parquet" => LazyFrame::scan_parquet(path.into(), ScanArgsParquet::default())
+            .map_err(|e| e.to_string()),
+        "csv" => LazyCsvReader::new(path.into())
+            .finish()
+            .map_err(|e| e.to_string()),
         other => Err(format!("Unsupported file format: .{other}")),
     }
 }
@@ -124,7 +122,8 @@ pub fn count_rows(lf: LazyFrame, path: &str) -> Result<usize, String> {
 /// Aggregate `len()` over a LazyFrame — used for both unfiltered parquet counts
 /// and filtered row counts where line-counting is not applicable.
 pub(crate) fn count_lf(lf: &LazyFrame) -> Result<usize, String> {
-    lf.clone().select([len().alias("_n")])
+    lf.clone()
+        .select([len().alias("_n")])
         .collect()
         .map_err(|e| e.to_string())?
         .column("_n")
@@ -227,17 +226,23 @@ fn anyvalue_to_json(v: AnyValue<'_>) -> serde_json::Value {
             .unwrap_or(serde_json::Value::Null),
         AnyValue::String(s) => serde_json::Value::String(s.to_string()),
         AnyValue::StringOwned(s) => serde_json::Value::String(s.to_string()),
-        AnyValue::Decimal(v, _precision, scale) => serde_json::Number::from_f64(v as f64 / 10f64.powi(scale as i32))
-            .map(serde_json::Value::Number)
-            .unwrap_or(serde_json::Value::Null),
+        AnyValue::Decimal(v, _precision, scale) => {
+            serde_json::Number::from_f64(v as f64 / 10f64.powi(scale as i32))
+                .map(serde_json::Value::Number)
+                .unwrap_or(serde_json::Value::Null)
+        }
         // Binary blobs: emit a short descriptor rather than raw bytes.
         AnyValue::Binary(bytes) => serde_json::Value::String(format!("<{} bytes>", bytes.len())),
-        AnyValue::BinaryOwned(bytes) => serde_json::Value::String(format!("<{} bytes>", bytes.len())),
+        AnyValue::BinaryOwned(bytes) => {
+            serde_json::Value::String(format!("<{} bytes>", bytes.len()))
+        }
         // Nested collections → real JSON arrays, recursing per element.
         AnyValue::List(series) => list_to_json(&series),
         AnyValue::Array(series, _) => list_to_json(&series),
         // Structs → JSON objects, preserving field names (the key win over Display).
-        AnyValue::Struct(_, _, fields) => struct_to_json(&v, fields.iter().map(|f| f.name().to_string())),
+        AnyValue::Struct(_, _, fields) => {
+            struct_to_json(&v, fields.iter().map(|f| f.name().to_string()))
+        }
         AnyValue::StructOwned(ref payload) => {
             let names: Vec<String> = payload.1.iter().map(|f| f.name().to_string()).collect();
             struct_to_json(&v, names.into_iter())
@@ -365,9 +370,7 @@ pub fn write_file(df: &mut DataFrame, path: &str) -> Result<(), String> {
             .finish(df)
             .map(|_| ())
             .map_err(|e| e.to_string()),
-        _ => CsvWriter::new(file)
-            .finish(df)
-            .map_err(|e| e.to_string()),
+        _ => CsvWriter::new(file).finish(df).map_err(|e| e.to_string()),
     }
 }
 
@@ -407,8 +410,10 @@ fn parse_value(v: &str, dtype: &str) -> Result<Expr, String> {
             Ok(lit(days).cast(DataType::Date))
         }
         "datetime" => {
-            let dt = chrono::NaiveDateTime::parse_from_str(v, "%Y-%m-%dT%H:%M:%S")
-                .map_err(|e| format!("Cannot parse '{v}' as datetime (expected YYYY-MM-DDTHH:MM:SS): {e}"))?;
+            let dt =
+                chrono::NaiveDateTime::parse_from_str(v, "%Y-%m-%dT%H:%M:%S").map_err(|e| {
+                    format!("Cannot parse '{v}' as datetime (expected YYYY-MM-DDTHH:MM:SS): {e}")
+                })?;
             let epoch = chrono::NaiveDate::from_ymd_opt(1970, 1, 1)
                 .unwrap()
                 .and_hms_opt(0, 0, 0)
@@ -539,7 +544,10 @@ pub fn get_h3_features(
     let mut out = Vec::with_capacity(df.height());
     for (row, cell) in idx.into_iter().zip(cells.into_iter()) {
         if let (Some(row), Some(cell)) = (row, cell) {
-            out.push(H3Feature { cell: cell.to_string(), idx: row });
+            out.push(H3Feature {
+                cell: cell.to_string(),
+                idx: row,
+            });
         }
     }
     Ok(out)
@@ -619,7 +627,10 @@ pub fn build_pipeline(
     let lf = scan_file(path)?;
     let lf = apply_filters(lf, filters, schema)?;
     let lf = match sort_col {
-        Some(c) => lf.sort([c], SortMultipleOptions::default().with_order_descending(sort_desc)),
+        Some(c) => lf.sort(
+            [c],
+            SortMultipleOptions::default().with_order_descending(sort_desc),
+        ),
         None => lf,
     };
     Ok(apply_column_select(lf, columns))
@@ -680,8 +691,10 @@ mod tests {
 
         let mut lf = scan_file(path_str).unwrap();
         let schema = extract_schema(&mut lf).unwrap();
-        let dtypes: std::collections::HashMap<_, _> =
-            schema.iter().map(|c| (c.name.as_str(), c.dtype.as_str())).collect();
+        let dtypes: std::collections::HashMap<_, _> = schema
+            .iter()
+            .map(|c| (c.name.as_str(), c.dtype.as_str()))
+            .collect();
         assert_eq!(dtypes["st"], "struct");
         assert_eq!(dtypes["xs"], "list");
 

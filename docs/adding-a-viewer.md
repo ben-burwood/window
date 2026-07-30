@@ -1,0 +1,49 @@
+# Adding a new viewer
+
+This monorepo is built so a new file-viewer is mostly wiring, not boilerplate. There are two
+kinds of viewer; pick the one that matches your rendering stack.
+
+## A new Tauri + Vue viewer (like data-framer / map-windower / doc-viewer)
+
+1. **Scaffold** `apps/<name>/` with `src/` (Vue) and `src-tauri/` (Cargo + `tauri.conf.json` +
+   `capabilities/` + `icons/`). Copy the shape of an existing app — doc-viewer is the smallest.
+2. **Rust** (`apps/<name>/src-tauri/`):
+   - `Cargo.toml`: use the workspace fields (`version.workspace = true`, etc.), depend on
+     `viewer-core`, `viewer-tauri`, `tauri`, and the two plugin crates via `{ workspace = true }`
+     (the plugins must stay *direct* deps so their ACL permissions are discovered), plus your
+     format-specific crates.
+   - `src/main.rs`: `fn main() { <name>_lib::run() }`.
+   - `src/lib.rs`: `viewer_tauri::app(&["ext"]) .invoke_handler(tauri::generate_handler![
+     viewer_tauri::get_startup_file, /* your commands */ ]).run(tauri::generate_context!())`.
+     Keep format logic in one module beside `lib.rs`.
+   - Add the crate to the root `Cargo.toml` `[workspace] members`.
+3. **Frontend** (`apps/<name>/`):
+   - `package.json`: depend on `@viewers/ui`, `@viewers/bridge` (and `@viewers/config` in dev),
+     named `"*"`.
+   - `vite.config.ts`: `export default viewerConfig({ manualChunks: { … } })`.
+   - `tsconfig.json`: `"extends": "@viewers/config/tsconfig.base.json"`.
+   - `src/main.ts`: `import "@viewers/ui/theme.css"` first.
+   - `src/bridge.ts`: this app's typed `invoke` wrappers (built on `@viewers/bridge`). Never
+     call `invoke("…")` in a component — go through the bridge.
+   - Use `<Toolbar>`, `<ToolbarButton>`, `<EmptyState>` from `@viewers/ui`; style with the
+     `--vw-*` tokens, never hardcoded hex.
+4. **Config**: keep `tauri.conf.json` minimal (productName, identifier, version,
+   `build.frontendDist`, `app.windows`, `bundle.icon`, `bundle.fileAssociations`, and
+   `app.security.assetProtocol` if you need it). Shared keys come from `tauri.base.json`.
+5. **CI/Release**: add the app to the `paths-filter` block and matrices in
+   `.github/workflows/ci.yml` and `release-tauri.yml`.
+6. **Verify**: `just build-app <name>` (frontend), `cargo build -p <name>`, `just bundle <name>`
+   (installer), and a manual launch + double-click-open smoke test.
+
+## A new egui viewer (like image-shutter)
+
+The crate *is* the app — no `src-tauri/`, no frontend. Depend on `viewer-core` for the shared
+framework-free helpers (sniffing, etc.), keep your `[package.metadata.packager]` config for
+`cargo-packager`, add the crate to `[workspace] members`, and add a matrix row to
+`release-egui.yml`. Do **not** pull it into the Tauri shared frontend packages.
+
+## The rules that keep this working
+
+- Shared crates/packages know **nothing** about file formats. Format knowledge stays in the app.
+- Extract into a shared layer only on the **second** occurrence, never speculatively.
+- `viewer-core` must stay framework-free (`just check-core-clean` enforces it).

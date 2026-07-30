@@ -23,6 +23,11 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Image Shutter",
         options,
-        Box::new(move |cc| Ok(Box::new(app::ImageShutterApp::new(cc, initial_file.clone())))),
+        Box::new(move |cc| {
+            Ok(Box::new(app::ImageShutterApp::new(
+                cc,
+                initial_file.clone(),
+            )))
+        }),
     )
 }

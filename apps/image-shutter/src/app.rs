@@ -109,11 +109,7 @@ impl ImageShutterApp {
         if needs_render {
             let color_image = svg::render(img, desired);
             self.tex_scale = desired;
-            self.texture = Some(ctx.load_texture(
-                "svg",
-                color_image,
-                TextureOptions::LINEAR,
-            ));
+            self.texture = Some(ctx.load_texture("svg", color_image, TextureOptions::LINEAR));
         }
     }
 }
@@ -148,7 +144,9 @@ impl eframe::App for ImageShutterApp {
                 // Left — current file name.
                 cols[0].with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                     if self.file_name.is_empty() {
-                        ui.add(egui::Label::new(egui::RichText::new("No file open").weak()).truncate());
+                        ui.add(
+                            egui::Label::new(egui::RichText::new("No file open").weak()).truncate(),
+                        );
                     } else {
                         ui.add(egui::Label::new(&self.file_name).truncate());
                     }

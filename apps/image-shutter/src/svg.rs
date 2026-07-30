@@ -50,20 +50,15 @@ pub fn load(path: &Path) -> Result<SvgImage, String> {
 /// RGBA image ready to upload as an egui texture.
 pub fn render(img: &SvgImage, scale: f32) -> ColorImage {
     let scale = scale.max(0.001);
-    let w = (((img.width as f32) * scale).round() as u32)
-        .clamp(1, MAX_DIM);
-    let h = (((img.height as f32) * scale).round() as u32)
-        .clamp(1, MAX_DIM);
+    let w = (((img.width as f32) * scale).round() as u32).clamp(1, MAX_DIM);
+    let h = (((img.height as f32) * scale).round() as u32).clamp(1, MAX_DIM);
 
-    let mut pixmap = tiny_skia::Pixmap::new(w, h)
-        .expect("failed to allocate pixmap");
+    let mut pixmap = tiny_skia::Pixmap::new(w, h).expect("failed to allocate pixmap");
 
     // Use the *actual* per-axis scale after clamping/rounding so the render
     // fills the pixmap exactly.
-    let transform = tiny_skia::Transform::from_scale(
-        w as f32 / img.width as f32,
-        h as f32 / img.height as f32,
-    );
+    let transform =
+        tiny_skia::Transform::from_scale(w as f32 / img.width as f32, h as f32 / img.height as f32);
     resvg::render(&img.tree, transform, &mut pixmap.as_mut());
 
     // tiny-skia's buffer is premultiplied RGBA, which is exactly what egui wants.

@@ -41,9 +41,14 @@ pub fn to_geojson(path: &str) -> Result<String, String> {
     let column_meta = geo
         .get("columns")
         .and_then(|c| c.get(primary))
-        .ok_or_else(|| format!("GeoParquet metadata has no entry for geometry column '{primary}'."))?;
+        .ok_or_else(|| {
+            format!("GeoParquet metadata has no entry for geometry column '{primary}'.")
+        })?;
 
-    let encoding = column_meta.get("encoding").and_then(Value::as_str).unwrap_or("");
+    let encoding = column_meta
+        .get("encoding")
+        .and_then(Value::as_str)
+        .unwrap_or("");
     if !encoding.eq_ignore_ascii_case("WKB") {
         return Err(format!(
             "Unsupported GeoParquet geometry encoding '{encoding}'. Only WKB is supported."
@@ -55,7 +60,9 @@ pub fn to_geojson(path: &str) -> Result<String, String> {
     let geom_idx = schema
         .index_of(primary)
         .map_err(|_| format!("Geometry column '{primary}' not found in the Parquet schema."))?;
-    let prop_indices: Vec<usize> = (0..schema.fields().len()).filter(|&i| i != geom_idx).collect();
+    let prop_indices: Vec<usize> = (0..schema.fields().len())
+        .filter(|&i| i != geom_idx)
+        .collect();
 
     let reader = builder
         .build()
@@ -67,7 +74,7 @@ pub fn to_geojson(path: &str) -> Result<String, String> {
         let batch = batch.map_err(|e| format!("Failed to read Parquet data: {e}"))?;
         let properties = properties_json(&batch, &prop_indices)?;
         let geom_col = batch.column(geom_idx);
-        for row in 0..batch.num_rows() {
+        for (row, prop) in properties.iter().enumerate() {
             let Some(geometry) = wkb_to_geojson(geom_col.as_ref(), row)? else {
                 continue; // null / empty geometry — skip the feature
             };
@@ -76,7 +83,7 @@ pub fn to_geojson(path: &str) -> Result<String, String> {
             }
             first = false;
             out.push_str("{\"type\":\"Feature\",\"properties\":");
-            out.push_str(&properties[row].to_string());
+            out.push_str(&prop.to_string());
             out.push_str(",\"geometry\":");
             out.push_str(&geometry);
             out.push('}');
@@ -153,7 +160,11 @@ fn ensure_wgs84(crs: Option<&Value>) -> Result<(), String> {
         let authority = id.get("authority").and_then(Value::as_str).unwrap_or("");
         let code = id
             .get("code")
-            .map(|c| c.as_str().map(str::to_string).unwrap_or_else(|| c.to_string()))
+            .map(|c| {
+                c.as_str()
+                    .map(str::to_string)
+                    .unwrap_or_else(|| c.to_string())
+            })
             .unwrap_or_default();
         if (authority.eq_ignore_ascii_case("EPSG") && code == "4326")
             || (authority.eq_ignore_ascii_case("OGC") && code.eq_ignore_ascii_case("CRS84"))

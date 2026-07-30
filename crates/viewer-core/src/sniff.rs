@@ -53,7 +53,10 @@ mod tests {
 
     #[test]
     fn extension_is_lowercased_without_dot() {
-        assert_eq!(extension_lower("a/b/File.PARQUET").as_deref(), Some("parquet"));
+        assert_eq!(
+            extension_lower("a/b/File.PARQUET").as_deref(),
+            Some("parquet")
+        );
         assert_eq!(extension_lower("archive.tar.gz").as_deref(), Some("gz"));
         assert_eq!(extension_lower("README"), None);
     }
@@ -62,7 +65,10 @@ mod tests {
     fn has_extension_is_case_insensitive() {
         assert!(has_extension("x.pdf", &["pdf"]));
         assert!(has_extension("x.PDF", &["pdf"]));
-        assert!(has_extension("x.pmtiles", &["geojson", "pmtiles", "geoparquet"]));
+        assert!(has_extension(
+            "x.pmtiles",
+            &["geojson", "pmtiles", "geoparquet"]
+        ));
         assert!(!has_extension("x.csv", &["pdf"]));
         assert!(!has_extension("noext", &["pdf"]));
     }
