@@ -3,6 +3,9 @@
 
 use egui::{Color32, Rect, Sense, TextureHandle, TextureOptions, Vec2, ViewportCommand};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::time::Duration;
 
 use crate::svg::{self, SvgImage};
 
@@ -31,10 +34,18 @@ pub struct ImageShutterApp {
     fit_pending: bool,
     /// Set after a load so the window title is refreshed once next frame.
     title_dirty: bool,
+    /// Path of the loaded file, used to reload.
+    current_path: Option<PathBuf>,
+    /// Set by the file watcher (on its own thread) when the file changes on disk.
+    outdated: Arc<AtomicBool>,
+    /// Live file watcher; replaced on each load, dropped on exit.
+    _watch: Option<window_core::FileWatch>,
+    /// Wakes the UI from the watcher thread.
+    egui_ctx: egui::Context,
 }
 
 impl ImageShutterApp {
-    pub fn new(_cc: &eframe::CreationContext<'_>, initial_file: Option<PathBuf>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>, initial_file: Option<PathBuf>) -> Self {
         let mut app = Self {
             svg: None,
             texture: None,
@@ -45,6 +56,10 @@ impl ImageShutterApp {
             offset: Vec2::ZERO,
             fit_pending: false,
             title_dirty: true,
+            current_path: None,
+            outdated: Arc::new(AtomicBool::new(false)),
+            _watch: None,
+            egui_ctx: cc.egui_ctx.clone(),
         };
         if let Some(path) = initial_file {
             app.load(&path);
@@ -53,6 +68,7 @@ impl ImageShutterApp {
     }
 
     fn load(&mut self, path: &Path) {
+        self.outdated.store(false, Ordering::Relaxed);
         match svg::load(path) {
             Ok(img) => {
                 self.file_name = path
@@ -67,6 +83,8 @@ impl ImageShutterApp {
                 self.offset = Vec2::ZERO;
                 self.fit_pending = true;
                 self.title_dirty = true;
+                self.current_path = Some(path.to_path_buf());
+                self.start_watch(path);
             }
             Err(e) => {
                 self.error = Some(e);
@@ -77,7 +95,25 @@ impl ImageShutterApp {
                     .map(|n| n.to_string_lossy().into_owned())
                     .unwrap_or_default();
                 self.title_dirty = true;
+                self.current_path = None;
+                self._watch = None;
             }
+        }
+    }
+
+    fn start_watch(&mut self, path: &Path) {
+        let outdated = self.outdated.clone();
+        let ctx = self.egui_ctx.clone();
+        self._watch = window_core::watch_file(path, Duration::from_millis(300), move || {
+            outdated.store(true, Ordering::Relaxed);
+            ctx.request_repaint();
+        })
+        .ok();
+    }
+
+    fn reload(&mut self) {
+        if let Some(path) = self.current_path.clone() {
+            self.load(&path);
         }
     }
 
@@ -149,6 +185,23 @@ impl eframe::App for ImageShutterApp {
                         );
                     } else {
                         ui.add(egui::Label::new(&self.file_name).truncate());
+                    }
+                    if self.svg.is_some() && self.outdated.load(Ordering::Relaxed) {
+                        let pill = egui::Button::new(
+                            egui::RichText::new("outdated")
+                                .small()
+                                .strong()
+                                .color(Color32::from_rgb(0xb9, 0x1c, 0x1c)),
+                        )
+                        .small()
+                        .fill(Color32::from_rgb(0xfe, 0xe2, 0xe2));
+                        if ui
+                            .add(pill)
+                            .on_hover_text("File changed on disk — click to reload")
+                            .clicked()
+                        {
+                            self.reload();
+                        }
                     }
                 });
 

@@ -1,15 +1,26 @@
 <script setup lang="ts">
-// Tokenized status pill; label comes from the slot.
+// Tokenized status pill; label comes from the slot. Set `interactive` to make it a clickable,
+// keyboard-focusable button that emits `click`.
 withDefaults(
   defineProps<{
     variant?: "default" | "warning" | "danger";
+    interactive?: boolean;
   }>(),
-  { variant: "default" },
+  { variant: "default", interactive: false },
 );
+
+const emit = defineEmits<{ (e: "click"): void }>();
 </script>
 
 <template>
-  <span class="vw-badge" :class="`vw-badge--${variant}`">
+  <span
+    class="vw-badge"
+    :class="[`vw-badge--${variant}`, { 'vw-badge--interactive': interactive }]"
+    :role="interactive ? 'button' : undefined"
+    :tabindex="interactive ? 0 : undefined"
+    @click="interactive && emit('click')"
+    @keyup.enter="interactive && emit('click')"
+  >
     <slot />
   </span>
 </template>
@@ -28,6 +39,13 @@ withDefaults(
   text-transform: uppercase;
   letter-spacing: 0.02em;
   white-space: nowrap;
+}
+
+.vw-badge--interactive {
+  cursor: pointer;
+}
+.vw-badge--interactive:hover {
+  border-color: currentColor;
 }
 
 .vw-badge--default {

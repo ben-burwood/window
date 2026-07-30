@@ -55,14 +55,18 @@ function basename(path: string): string {
   return path.split(/[\\/]/).pop() || path;
 }
 
-async function loadFileByPath(path: string) {
+let reloadNonce = 0;
+async function loadFileByPath(path: string, isRescan = false) {
   loading.value = true;
   error.value = null;
   try {
     const name = basename(path);
     // The viewer reads the PDF directly via the asset:// protocol, so the bytes
     // never cross the IPC boundary.
-    loaded.value = { name, url: convertFileSrc(path) };
+    let url = convertFileSrc(path);
+    // A rescan reopens the same path, so bust the cache to fetch the changed bytes.
+    if (isRescan) url += (url.includes("?") ? "&" : "?") + "reload=" + ++reloadNonce;
+    loaded.value = { name, url };
     await watchFile(path);
     outdated.value = false;
   } catch (e) {
@@ -76,6 +80,10 @@ async function loadFileByPath(path: string) {
 function onViewError(message: string) {
   loaded.value = null;
   error.value = message;
+}
+
+function reload() {
+  if (lastOpened) loadFileByPath(lastOpened, true);
 }
 
 // Single deduped entry point: every source (dialog, startup, drop, onOpenFile)
@@ -136,7 +144,14 @@ onUnmounted(() => {
     <Toolbar v-if="loaded">
       <template #start>
         <span class="file-name" :title="loaded.name">{{ loaded.name }}</span>
-        <Badge v-if="outdated" variant="warning">outdated</Badge>
+        <Badge
+          v-if="outdated"
+          variant="warning"
+          interactive
+          title="File changed on disk — click to reload"
+          @click="reload"
+          >outdated</Badge
+        >
       </template>
 
       <template #center>

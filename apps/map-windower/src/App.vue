@@ -33,10 +33,12 @@ function basename(path: string): string {
   return path.split(/[\\/]/).pop() || path;
 }
 
-async function loadFileByPath(path: string) {
+async function loadFileByPath(path: string, isRescan = false) {
   loading.value = true;
-  error.value = null;
-  layerNames.value = [];
+  if (!isRescan) {
+    error.value = null;
+    layerNames.value = [];
+  }
   try {
     const name = basename(path);
     const kind = fileKind(path);
@@ -49,11 +51,17 @@ async function loadFileByPath(path: string) {
       const data = toFeatureCollection(JSON.parse(text));
       loaded.value = { kind: "geojson", name, data };
     }
+    error.value = null;
     await watchFile(path);
     outdated.value = false;
   } catch (e) {
-    loaded.value = null;
-    error.value = e instanceof Error ? e.message : String(e);
+    if (isRescan) {
+      // Transient read during a rescan (e.g. editor mid-save): keep current data, flag stale.
+      outdated.value = true;
+    } else {
+      loaded.value = null;
+      error.value = e instanceof Error ? e.message : String(e);
+    }
   } finally {
     loading.value = false;
   }
@@ -66,6 +74,10 @@ function onMapError(message: string) {
 
 function onLayers(names: string[]) {
   layerNames.value = names;
+}
+
+function reload() {
+  if (lastOpened) loadFileByPath(lastOpened, true);
 }
 
 // Single deduped entry point: every source (dialog, startup, drop, onOpenFile)
@@ -109,7 +121,14 @@ onUnmounted(() => unlisteners.forEach((u) => u()));
     <Toolbar v-if="loaded">
       <template #start>
         <span class="file-name">{{ loaded.name }}</span>
-        <Badge v-if="outdated" variant="warning">outdated</Badge>
+        <Badge
+          v-if="outdated"
+          variant="warning"
+          interactive
+          title="File changed on disk — click to reload"
+          @click="reload"
+          >outdated</Badge
+        >
         <span v-if="layerNames.length" class="layer-names">{{ layerNames.join(", ") }}</span>
       </template>
       <template #end>

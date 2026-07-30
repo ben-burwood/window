@@ -127,6 +127,34 @@ async function loadFileByPath(path: string) {
   }
 }
 
+// Re-scan the open file after it changes on disk: refresh schema + row count and refetch every
+// view, keeping the active filters, sort and column selection.
+async function rescan() {
+  const path = fileInfo.value?.path;
+  if (!path || view.value !== "loaded") return;
+  try {
+    const info = await loadFile(path);
+    fileInfo.value = info;
+    // Default any newly-added column to visible; keep existing choices.
+    const vis = { ...activeColumnVisibility.value };
+    let added = false;
+    for (const c of info.columns) {
+      if (!(c.name in vis)) {
+        vis[c.name] = true;
+        added = true;
+      }
+    }
+    if (added) activeColumnVisibility.value = vis;
+    // A new array reference makes the grid, map and chart refetch from disk.
+    activeFilters.value = [...activeFilters.value];
+    outdated.value = false;
+    await watchFile(path);
+  } catch {
+    // Transient read (e.g. the editor mid-save): keep the current data and flag it stale.
+    outdated.value = true;
+  }
+}
+
 // Single deduped entry point: every source (dialog, startup, drop, onOpenFile)
 // funnels through here so the same file never loads twice.
 let lastOpened: string | null = null;
@@ -217,7 +245,14 @@ function onColumnsReset() {
     <Toolbar v-if="view === 'loaded'">
       <template #start>
         <span class="file-name">{{ fileName }}</span>
-        <Badge v-if="outdated" variant="warning">outdated</Badge>
+        <Badge
+          v-if="outdated"
+          variant="warning"
+          interactive
+          title="File changed on disk — click to reload"
+          @click="rescan"
+          >outdated</Badge
+        >
         <span class="row-count">
           <template v-if="activeFilters.length > 0">
             {{ filteredRowCount.toLocaleString() }} /
@@ -282,6 +317,7 @@ function onColumnsReset() {
           :activeColumnVisibility="activeColumnVisibility"
           @ready="gridApi = $event"
           @row-count-changed="filteredRowCount = $event"
+          @resynced="outdated = false"
         />
         <MapView
           v-if="hasMapData"

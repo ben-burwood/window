@@ -45,6 +45,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   ready: [api: GridApi];
   "row-count-changed": [count: number];
+  // The grid purged and refetched from disk (filter/sort/column change) — data is back in sync.
+  resynced: [];
 }>();
 
 // ---------------------------------------------------------------------------
@@ -126,6 +128,8 @@ function buildDatasource(): IDatasource {
 function onGridReady(event: GridReadyEvent) {
   gridApi.value = event.api;
   event.api.setGridOption("datasource", buildDatasource());
+  // Sorting refetches every row from disk, so the view is back in sync.
+  event.api.addEventListener("sortChanged", () => emit("resynced"));
   emit("ready", event.api);
 }
 
@@ -151,6 +155,7 @@ watch(
   [() => props.activeFilters, () => props.activeColumnVisibility],
   () => {
     gridApi.value?.purgeInfiniteCache();
+    emit("resynced");
   },
   { deep: true },
 );
