@@ -3,13 +3,13 @@ import { onMounted, onUnmounted, ref, watch } from "vue";
 import { EmptyState, Toolbar, ToolbarButton } from "@window/ui";
 import PdfView from "./components/PdfView.vue";
 import { isPdf, PDF_EXTENSIONS, type LoadedSource, type ViewerState } from "./types";
-import { getStartupFile, openFile, convertFileSrc, onFileDrop } from "./bridge";
+import { getStartupFile, openFile, convertFileSrc, onFileDrop, onOpenFile } from "./bridge";
 
 const loaded = ref<LoadedSource | null>(null);
 const error = ref<string | null>(null);
 const loading = ref(false);
 const dragging = ref(false);
-let unlistenDrop: (() => void) | null = null;
+const unlisteners: Array<() => void> = [];
 
 const viewer = ref<InstanceType<typeof PdfView> | null>(null);
 
@@ -67,10 +67,25 @@ function onViewError(message: string) {
   error.value = message;
 }
 
+// Single deduped entry point: every source (dialog, startup, drop, onOpenFile)
+// funnels through here so the same file never loads twice.
+let lastOpened: string | null = null;
+async function openPath(path: string) {
+  if (path === lastOpened) return;
+  lastOpened = path;
+  await loadFileByPath(path);
+}
+
+function handleDrop(paths: string[]) {
+  const path = paths.find(isPdf);
+  if (path) openPath(path);
+  else error.value = "Please drop a PDF file.";
+}
+
 async function chooseFile() {
   const path = await openFile([{ name: "PDF", extensions: PDF_EXTENSIONS }]);
   if (!path) return;
-  await loadFileByPath(path);
+  await openPath(path);
 }
 
 // Ctrl/Cmd+F focuses the find box (the classic find shortcut).
@@ -87,23 +102,18 @@ onMounted(async () => {
 
   // OS file drops are delivered by the webview (HTML5 drop events don't carry a
   // real filesystem path under Tauri), so we listen for the native drag-drop.
-  unlistenDrop = await onFileDrop(
-    async (paths) => {
-      const path = paths.find(isPdf);
-      if (path) await loadFileByPath(path);
-      else error.value = "Please drop a PDF file.";
-    },
-    (hovering) => {
-      dragging.value = hovering;
-    },
-  );
+  // onOpenFile covers macOS runtime file-opens. Subscribe before pulling the
+  // startup file so nothing is missed; everything funnels through openPath.
+  const un1 = await onFileDrop(handleDrop, (hovering) => (dragging.value = hovering));
+  const un2 = await onOpenFile(openPath);
+  unlisteners.push(un1, un2);
 
-  const startupFile = await getStartupFile();
-  if (startupFile) await loadFileByPath(startupFile);
+  const startup = await getStartupFile();
+  if (startup) await openPath(startup);
 });
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown);
-  unlistenDrop?.();
+  unlisteners.forEach((u) => u());
 });
 </script>
 

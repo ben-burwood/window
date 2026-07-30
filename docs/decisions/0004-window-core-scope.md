@@ -1,10 +1,10 @@
-# 0004 — viewer-core is intentionally thin
+# 0004 — window-core is intentionally thin
 
 **Status:** accepted (Phase 3)
 
 ## Context
 
-The migration spec imagined a rich `viewer-core` (recents, path canonicalisation, file
+The migration spec imagined a rich `window-core` (recents, path canonicalisation, file
 sniffing, debounced watch-and-reload, viewport math, PNG export, error types). The Phase 0
 audit found that almost none of that exists in Rust today: the three Tauri apps keep their
 logic in the Vue/TS frontend, and their backends are thin. The only genuinely-duplicated,
@@ -12,12 +12,12 @@ format-agnostic Rust across ≥2 apps is **file sniffing**.
 
 ## Decision
 
-`viewer-core` Phase 3 contains exactly what is duplicated and framework-free:
+`window-core` Phase 3 contains exactly what is duplicated and framework-free:
 
 - `sniff::extension_lower` / `sniff::has_extension` — replaces the hand-rolled extension
   checks in all three Tauri apps' `is_supported`.
 - `sniff::is_gzip` — the gzip magic-byte sniff, extracted from image-shutter's `maybe_gunzip`.
-  Extracting it makes image-shutter a `viewer-core` consumer too, so the crate is genuinely
+  Extracting it makes image-shutter a `window-core` consumer too, so the crate is genuinely
   shared across **both** the Tauri and egui worlds (the migration's stated thesis).
 
 **Deliberately NOT extracted** (per _"extract on the second occurrence, not the first"_ /
@@ -35,6 +35,6 @@ _"no speculative abstraction"_):
 
 ## Consequences
 
-- `viewer-core` stays small and honest; the framework-freedom invariant is trivially held and
-  enforced by `just check-core-clean`.
+- `window-core` stays small and honest; the framework-freedom invariant is trivially held and
+  checkable with `cargo tree -p window-core` (no tauri/eframe/egui/wry).
 - When any deferred item gains a second real consumer, it is extracted then — not now.

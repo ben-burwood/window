@@ -9,6 +9,10 @@ init:
 dev app:
     npm run tauri --workspace {{app}} -- dev --config ../../tauri.base.json
 
+# Run a non-Tauri (egui) app, e.g. `just run image-shutter [path/to/file]`.
+run app *args:
+    cargo run -p {{app}} -- {{args}}
+
 build:
     cargo build --workspace
 

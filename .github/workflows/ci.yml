@@ -59,8 +59,8 @@ jobs:
           if on "$DV"; then add '{"crate":"doc-viewer","deps":"webkit","web":"doc-viewer"}'; fi
           if on "$IS"; then add '{"crate":"image-shutter","deps":"egui","web":""}'; fi
           if [ "$SHARED" = "true" ]; then
-            add '{"crate":"viewer-core","deps":"none","web":""}'
-            add '{"crate":"viewer-tauri","deps":"webkit","web":""}'
+            add '{"crate":"window-core","deps":"none","web":""}'
+            add '{"crate":"window-tauri","deps":"webkit","web":""}'
           fi
           echo "rust={\"include\":$rust}" >> "$GITHUB_OUTPUT"
 
@@ -70,6 +70,17 @@ jobs:
       - uses: actions/checkout@v7
       - run: rustup show # installs the toolchain pinned by rust-toolchain.toml
       - run: cargo fmt --all --check
+
+  # Frontend formatting gate (Vite+ / Oxfmt), the JS/TS/Vue counterpart to `cargo fmt`.
+  fmt-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Vite+ (vp)
+        run: |
+          curl -fsSL https://vite.plus | bash
+          echo "$HOME/.vite-plus/bin" >> "$GITHUB_PATH"
+      - run: vp fmt --check
 
   rust:
     needs: changes

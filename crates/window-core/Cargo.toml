@@ -1,5 +1,5 @@
 [package]
-name = "viewer-core"
+name = "window-core"
 description = "Framework-free core shared by all viewers: file sniffing, path handling, errors."
 version.workspace = true
 edition.workspace = true

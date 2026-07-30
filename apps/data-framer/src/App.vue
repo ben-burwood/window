@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineAsyncComponent, onMounted } from "vue";
+import { ref, computed, defineAsyncComponent, onMounted, onUnmounted } from "vue";
 import type { ColumnState, GridApi } from "ag-grid-community";
 import { EmptyState, Toolbar, ToolbarButton } from "@window/ui";
 import type { FileInfo, FilterSpec } from "./types";
@@ -9,6 +9,8 @@ import {
   saveFile,
   loadFile,
   exportFile as exportFileCmd,
+  onFileDrop,
+  onOpenFile,
 } from "./bridge";
 import FilterPanel from "./components/FilterPanel.vue";
 import SelectPanel from "./components/SelectPanel.vue";
@@ -32,6 +34,15 @@ const gridApi = ref<GridApi | null>(null);
 const filterPanelOpen = ref(false);
 const columnPanelOpen = ref(false);
 const error = ref<string | null>(null);
+const dragging = ref(false);
+const unlisteners: Array<() => void> = [];
+
+// Extensions this app can open (drag-drop validation stays in the app).
+const SUPPORTED_EXTENSIONS = ["csv", "parquet"];
+function isSupported(path: string): boolean {
+  const lower = path.toLowerCase();
+  return SUPPORTED_EXTENSIONS.some((ext) => lower.endsWith(`.${ext}`));
+}
 
 // ---------------------------------------------------------------------------
 // Computed
@@ -111,16 +122,36 @@ async function loadFileByPath(path: string) {
   }
 }
 
-async function chooseFile() {
-  const path = await openFile([{ name: "Data Files", extensions: ["parquet", "csv"] }]);
-  if (!path) return;
+// Single deduped entry point: every source (dialog, startup, drop, onOpenFile)
+// funnels through here so the same file never loads twice.
+let lastOpened: string | null = null;
+async function openPath(path: string) {
+  if (path === lastOpened) return;
+  lastOpened = path;
   await loadFileByPath(path);
 }
 
+function handleDrop(paths: string[]) {
+  const path = paths.find(isSupported);
+  if (path) openPath(path);
+  else error.value = "Please drop a CSV or Parquet file.";
+}
+
+async function chooseFile() {
+  const path = await openFile([{ name: "Data Files", extensions: ["parquet", "csv"] }]);
+  if (!path) return;
+  await openPath(path);
+}
+
 onMounted(async () => {
-  const startupFile = await getStartupFile();
-  if (startupFile) await loadFileByPath(startupFile);
+  const un1 = await onFileDrop(handleDrop, (h) => (dragging.value = h));
+  const un2 = await onOpenFile(openPath);
+  unlisteners.push(un1, un2);
+
+  const startup = await getStartupFile();
+  if (startup) await openPath(startup);
 });
+onUnmounted(() => unlisteners.forEach((u) => u()));
 
 // ---------------------------------------------------------------------------
 // Export
@@ -266,6 +297,7 @@ function onColumnsReset() {
         title="Open a dataset"
         hint="Open a Parquet or CSV file to get started"
         :error="error"
+        :dragging="dragging"
         :action-label="view === 'loading' ? 'Loading…' : 'Open File'"
         @open="chooseFile"
       />

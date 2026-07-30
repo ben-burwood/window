@@ -13,7 +13,7 @@ readme = "README.md"
 workspace = true
 
 [dependencies]
-viewer-core = { workspace = true }
+window-core = { workspace = true }
 eframe = "0.35"
 egui = "0.35"
 usvg = "0.47"

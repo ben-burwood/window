@@ -20,9 +20,10 @@ The docs do **not** specify how relative paths in a split config are anchored.
   guarantee where a base file's relative paths resolve, keeping them app-side (anchored at
   `src-tauri`, as always) removes all ambiguity. Also per-app: `productName`, `identifier`,
   `app.windows`, `bundle.fileAssociations`, `app.security.assetProtocol`.
-- **Merge is wired into `justfile`**: `just bundle <app>` / `just tauri-dev <app>` always pass
-  `--config ../../tauri.base.json`. Building a Tauri app without the base omits the shared
-  metadata; the release workflow (Phase 7) uses the same flag.
+- **Merge is applied via `--config`**: `just dev <app>` (dev) and `release-tauri.yml` (bundles)
+  pass `--config ../../tauri.base.json`. Building a Tauri app without the base omits the shared
+  metadata, so local bundling must pass the flag explicitly:
+  `npm run tauri --workspace <app> -- build --config ../../tauri.base.json`.
 - **CSP left `null` (deferred).** A strict CSP can't be uniform: map-windower loads remote OSM
   raster tiles, so it needs origins the others don't — and since the base wins under RFC 7396,
   a base CSP would override any per-app allowance. Hardening CSP needs per-app values plus
@@ -39,5 +40,5 @@ The docs do **not** specify how relative paths in a split config are anchored.
   (residual length is icon paths + fileAssociations, both irreducible).
 - `cargo build` (no `--config`) compiles against the slimmed app config (missing shared bundle
   metadata, which only matters at CLI bundle time) — still valid for `generate_context!`.
-- The full "merged bundle has correct associations/publisher/CSP" gate requires running
-  `just bundle <app>` on each platform, which the headless environment can't do.
+- The full "merged bundle has correct associations/publisher/CSP" gate requires running a
+  `--config`-merged `tauri build` on each platform, which the headless environment can't do.

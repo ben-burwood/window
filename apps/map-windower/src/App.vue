@@ -1,14 +1,30 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { EmptyState, Toolbar, ToolbarButton } from "@window/ui";
 import MapView from "./components/MapView.vue";
 import { toFeatureCollection, fileKind, type LoadedSource } from "./types";
-import { getStartupFile, openFile, loadGeojsonText, loadGeoparquetText } from "./bridge";
+import {
+  getStartupFile,
+  openFile,
+  loadGeojsonText,
+  loadGeoparquetText,
+  onFileDrop,
+  onOpenFile,
+} from "./bridge";
 
 const loaded = ref<LoadedSource | null>(null);
 const layerNames = ref<string[]>([]);
 const error = ref<string | null>(null);
 const loading = ref(false);
+const dragging = ref(false);
+const unlisteners: Array<() => void> = [];
+
+// Extensions this app can open (drag-drop validation stays in the app).
+const SUPPORTED_EXTENSIONS = ["geojson", "pmtiles", "geoparquet"];
+function isSupported(path: string): boolean {
+  const lower = path.toLowerCase();
+  return SUPPORTED_EXTENSIONS.some((ext) => lower.endsWith(`.${ext}`));
+}
 
 function basename(path: string): string {
   return path.split(/[\\/]/).pop() || path;
@@ -47,17 +63,37 @@ function onLayers(names: string[]) {
   layerNames.value = names;
 }
 
+// Single deduped entry point: every source (dialog, startup, drop, onOpenFile)
+// funnels through here so the same file never loads twice.
+let lastOpened: string | null = null;
+async function openPath(path: string) {
+  if (path === lastOpened) return;
+  lastOpened = path;
+  await loadFileByPath(path);
+}
+
+function handleDrop(paths: string[]) {
+  const path = paths.find(isSupported);
+  if (path) openPath(path);
+  else error.value = "Please drop a GeoJSON, PMTiles or GeoParquet file.";
+}
+
 async function chooseFile() {
   const path = await openFile([
     { name: "Map data", extensions: ["geojson", "pmtiles", "geoparquet"] },
   ]);
-  if (path) await loadFileByPath(path);
+  if (path) await openPath(path);
 }
 
 onMounted(async () => {
-  const startupFile = await getStartupFile();
-  if (startupFile) await loadFileByPath(startupFile);
+  const un1 = await onFileDrop(handleDrop, (h) => (dragging.value = h));
+  const un2 = await onOpenFile(openPath);
+  unlisteners.push(un1, un2);
+
+  const startup = await getStartupFile();
+  if (startup) await openPath(startup);
 });
+onUnmounted(() => unlisteners.forEach((u) => u()));
 </script>
 
 <template>
@@ -80,6 +116,7 @@ onMounted(async () => {
         title="Open a map file"
         hint="Open a GeoJSON, PMTiles or GeoParquet file to get started"
         :error="error"
+        :dragging="dragging"
         :action-label="loading ? 'Loading…' : 'Open File'"
         @open="chooseFile"
       />

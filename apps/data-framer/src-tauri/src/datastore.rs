@@ -21,7 +21,7 @@ pub struct LoadedFile {
 }
 
 /// Tauri managed state — wrapped in Mutex so commands can mutate it.
-/// (The launch/startup-file path is handled separately by viewer-tauri.)
+/// (The launch/startup-file path is handled separately by window-tauri.)
 pub struct AppState {
     pub file: Mutex<Option<LoadedFile>>,
 }
@@ -92,7 +92,7 @@ pub const ROW_IDX: &str = "__row_idx";
 
 /// Build a LazyFrame from a file path. Supports .parquet and .csv.
 pub fn scan_file(path: &str) -> Result<LazyFrame, String> {
-    match file_ext(path).as_str() {
+    match window_core::extension_lower(path).as_deref().unwrap_or("") {
         "parquet" => LazyFrame::scan_parquet(path.into(), ScanArgsParquet::default())
             .map_err(|e| e.to_string()),
         "csv" => LazyCsvReader::new(path.into())
@@ -102,21 +102,8 @@ pub fn scan_file(path: &str) -> Result<LazyFrame, String> {
     }
 }
 
-/// Row count from an already-scanned LazyFrame, avoiding a second file open.
-///   Parquet: `len()` reads row-group footer metadata only (no row data loaded).
-///   CSV: counts newlines minus the header row (streaming, no data heap alloc).
-pub fn count_rows(lf: LazyFrame, path: &str) -> Result<usize, String> {
-    match file_ext(path).as_str() {
-        "parquet" => count_lf(&lf),
-        _ => {
-            use std::io::BufRead;
-            let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
-            Ok(std::io::BufReader::new(file)
-                .lines()
-                .count()
-                .saturating_sub(1))
-        }
-    }
+pub fn count_rows(lf: &LazyFrame) -> Result<usize, String> {
+    count_lf(lf)
 }
 
 /// Aggregate `len()` over a LazyFrame — used for both unfiltered parquet counts
@@ -271,14 +258,6 @@ fn struct_to_json(v: &AnyValue<'_>, names: impl Iterator<Item = String>) -> serd
 // Utility
 // ---------------------------------------------------------------------------
 
-fn file_ext(path: &str) -> String {
-    std::path::Path::new(path)
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("")
-        .to_lowercase()
-}
-
 // ---------------------------------------------------------------------------
 // Filtering
 // ---------------------------------------------------------------------------
@@ -365,7 +344,7 @@ fn build_filter_expr(spec: &FilterSpec, dtype: &str) -> Result<Expr, String> {
 /// `.parquet` → Parquet, anything else → CSV.
 pub fn write_file(df: &mut DataFrame, path: &str) -> Result<(), String> {
     let file = std::fs::File::create(path).map_err(|e| e.to_string())?;
-    match file_ext(path).as_str() {
+    match window_core::extension_lower(path).as_deref().unwrap_or("") {
         "parquet" => ParquetWriter::new(file)
             .finish(df)
             .map(|_| ())

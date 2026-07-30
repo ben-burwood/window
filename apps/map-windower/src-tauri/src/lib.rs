@@ -16,12 +16,10 @@ fn load_geoparquet(path: String) -> Result<String, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    viewer_tauri::app(&["geojson", "pmtiles", "geoparquet"])
-        .invoke_handler(tauri::generate_handler![
-            viewer_tauri::get_startup_file,
-            load_file,
-            load_geoparquet
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    window_tauri::run(
+        window_tauri::app(&["geojson", "pmtiles", "geoparquet"]).invoke_handler(
+            tauri::generate_handler![window_tauri::get_startup_file, load_file, load_geoparquet],
+        ),
+        tauri::generate_context!(),
+    );
 }

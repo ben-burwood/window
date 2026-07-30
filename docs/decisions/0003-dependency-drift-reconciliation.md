@@ -17,6 +17,12 @@ us to address or consciously accept.
   the asset protocol); data-framer does not.
 - **Package version / authors normalized** via `[workspace.package]`: all crates are `0.1.0`,
   `authors = ["Ben Burwood"]` (data-framer's stale `0.2.0` / `authors = ["you"]` dropped).
+- **Versioning centralised to one source of truth** (revised): the root
+  `[workspace.package].version` is the single version for every bundle. The `version` field was
+  removed from each `tauri.conf.json`, so Tauri falls back to the (workspace-inherited) crate
+  version; `cargo-packager` (image-shutter) already uses it. The npm `package.json` versions
+  were normalized to `0.1.0` for consistency (npm has no workspace-version inheritance, and
+  they no longer feed the bundle).
 - **Shared Tauri stack hoisted** to `[workspace.dependencies]`: `tauri`, `tauri-build`,
   `tauri-plugin-opener`, `tauri-plugin-dialog`, plus `serde`/`serde_json`. Format-specific
   deps (`polars`, `chrono`, `parquet`, `arrow-*`, `eframe`/`egui`/`resvg`/`usvg`/`tiny-skia`/

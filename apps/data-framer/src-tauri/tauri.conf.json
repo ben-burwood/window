@@ -1,7 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "data-framer",
-  "version": "../package.json",
   "identifier": "com.data-framer.app",
   "build": {
     "frontendDist": "../dist"

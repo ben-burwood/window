@@ -57,11 +57,21 @@ const processedRows = computed(() => {
   const dtype = props.columns.find((c) => c.name === xCol)?.dtype;
   if (dtype !== "datetime" && dtype !== "date") return rows.value;
 
-  return rows.value.map((row) => ({
-    ...row,
-    [xCol]: new Date((row[xCol] as string).replace(" ", "T")),
-  }));
+  return rows.value.map((row) => {
+    const value = row[xCol];
+    return {
+      ...row,
+      // Only parse real date strings; a null/non-string cell becomes null so the
+      // point is skipped rather than throwing on `.replace`.
+      [xCol]: typeof value === "string" ? new Date(value.replace(" ", "T")) : null,
+    };
+  });
 });
+
+// Read the OS colour scheme once so the chart matches light/dark mode.
+const chartTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+  ? "ag-default-dark"
+  : "ag-default";
 
 const chartOptions = computed((): AgChartOptions | undefined => {
   if (!appliedConfig.value) return undefined;
@@ -69,6 +79,7 @@ const chartOptions = computed((): AgChartOptions | undefined => {
 
   // Build typed options — cast via unknown to satisfy AG Charts' discriminated union
   return {
+    theme: chartTheme,
     data: processedRows.value,
     series: yColumns.map((yCol) => ({
       type: chartType,

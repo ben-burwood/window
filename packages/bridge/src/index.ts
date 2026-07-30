@@ -9,6 +9,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
+import { listen } from "@tauri-apps/api/event";
 import { open, save } from "@tauri-apps/plugin-dialog";
 
 export { invoke, convertFileSrc };
@@ -58,4 +59,16 @@ export function onFileDrop(
       onDrop(event.payload.paths);
     }
   });
+}
+
+/**
+ * Subscribe to runtime file-open requests routed from the backend — on macOS the OS delivers
+ * file-opens (including the first) as Apple Events while the app already runs. `onOpen` is
+ * called with the path. Returns a promise resolving to an unlisten function.
+ *
+ * (On Windows/Linux each file-open is its own process, so the file arrives via
+ * {@link getStartupFile} instead; this listener simply never fires there.)
+ */
+export function onOpenFile(onOpen: (path: string) => void): Promise<() => void> {
+  return listen<string>("open-file", (event) => onOpen(event.payload));
 }

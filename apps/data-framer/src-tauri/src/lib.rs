@@ -14,7 +14,7 @@ use tauri::State;
 fn load_file(path: String, state: State<'_, AppState>) -> Result<FileInfo, String> {
     let mut lf = datastore::scan_file(&path)?;
     let columns = datastore::extract_schema(&mut lf)?;
-    let total_rows = datastore::count_rows(lf, &path)?;
+    let total_rows = datastore::count_rows(&lf)?;
 
     *state.file.lock().unwrap() = Some(LoadedFile {
         path: path.clone(),
@@ -181,21 +181,22 @@ fn export_file(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    viewer_tauri::app(&["csv", "parquet"])
-        .manage(AppState {
-            file: Mutex::new(None),
-        })
-        .invoke_handler(tauri::generate_handler![
-            load_file,
-            get_rows,
-            export_file,
-            get_map_points,
-            get_h3_values,
-            get_geometry,
-            get_row,
-            get_chart_data,
-            viewer_tauri::get_startup_file
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    window_tauri::run(
+        window_tauri::app(&["csv", "parquet"])
+            .manage(AppState {
+                file: Mutex::new(None),
+            })
+            .invoke_handler(tauri::generate_handler![
+                load_file,
+                get_rows,
+                export_file,
+                get_map_points,
+                get_h3_values,
+                get_geometry,
+                get_row,
+                get_chart_data,
+                window_tauri::get_startup_file
+            ]),
+        tauri::generate_context!(),
+    );
 }

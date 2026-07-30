@@ -3,7 +3,7 @@ use std::path::Path;
 /// The file's extension, lowercased and without the leading dot; `None` if it has none.
 ///
 /// ```
-/// # use viewer_core::extension_lower;
+/// # use window_core::extension_lower;
 /// assert_eq!(extension_lower("data.CSV").as_deref(), Some("csv"));
 /// assert_eq!(extension_lower("noext"), None);
 /// ```
@@ -17,7 +17,7 @@ pub fn extension_lower(path: impl AsRef<Path>) -> Option<String> {
 /// a leading dot (e.g. `&["geojson", "pmtiles", "geoparquet"]`).
 ///
 /// ```
-/// # use viewer_core::has_extension;
+/// # use window_core::has_extension;
 /// assert!(has_extension("map.GeoJSON", &["geojson", "pmtiles"]));
 /// assert!(!has_extension("map.pdf", &["geojson", "pmtiles"]));
 /// ```
@@ -32,7 +32,7 @@ pub fn has_extension(path: impl AsRef<Path>, exts: &[&str]) -> bool {
 /// handle gzip-compressed payloads such as `.svgz`.
 ///
 /// ```
-/// # use viewer_core::is_gzip;
+/// # use window_core::is_gzip;
 /// assert!(is_gzip(&[0x1f, 0x8b, 0x08]));
 /// assert!(!is_gzip(b"<svg"));
 /// ```

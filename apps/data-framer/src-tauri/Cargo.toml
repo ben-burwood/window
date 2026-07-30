@@ -21,10 +21,10 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { workspace = true }
 
 [dependencies]
-viewer-core = { workspace = true }
-viewer-tauri = { workspace = true }
+window-core = { workspace = true }
+window-tauri = { workspace = true }
 tauri = { workspace = true }
-# Plugins are initialized in viewer-tauri, but must be *direct* deps here so Tauri's ACL
+# Plugins are initialized in window-tauri, but must be *direct* deps here so Tauri's ACL
 # discovers their permissions (opener:default / dialog:default) referenced in capabilities/.
 tauri-plugin-opener = { workspace = true }
 tauri-plugin-dialog = { workspace = true }

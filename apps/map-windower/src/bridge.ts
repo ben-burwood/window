@@ -2,7 +2,7 @@
 // built on the shared @window/bridge. Components import from here, never call invoke directly.
 import { invoke } from "@window/bridge";
 
-export { getStartupFile, openFile } from "@window/bridge";
+export { getStartupFile, openFile, onFileDrop, onOpenFile } from "@window/bridge";
 
 /** Read a GeoJSON file and return its raw text (the frontend parses/validates it). */
 export function loadGeojsonText(path: string): Promise<string> {

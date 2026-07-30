@@ -1,5 +1,5 @@
 [package]
-name = "viewer-tauri"
+name = "window-tauri"
 description = "Shared Tauri plumbing for the viewer apps: common plugins, startup-file state, and an argv launch-path handler exposed as a builder."
 version.workspace = true
 edition.workspace = true
@@ -11,7 +11,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-viewer-core = { workspace = true }
+window-core = { workspace = true }
 tauri = { workspace = true }
 tauri-plugin-opener = { workspace = true }
 tauri-plugin-dialog = { workspace = true }
