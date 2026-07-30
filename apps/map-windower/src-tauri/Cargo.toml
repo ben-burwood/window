@@ -22,7 +22,10 @@ tauri-build = { workspace = true }
 
 [dependencies]
 viewer-core = { workspace = true }
+viewer-tauri = { workspace = true }
 tauri = { workspace = true, features = ["protocol-asset"] }
+# Plugins are initialized in viewer-tauri, but must be *direct* deps here so Tauri's ACL
+# discovers their permissions (opener:default / dialog:default) referenced in capabilities/.
 tauri-plugin-opener = { workspace = true }
 tauri-plugin-dialog = { workspace = true }
 serde = { workspace = true }
