@@ -1,10 +1,3 @@
-//! File sniffing — the one piece of format-agnostic logic that was genuinely duplicated
-//! across the apps at the Rust level (the three Tauri apps each hand-rolled an extension
-//! check; image-shutter sniffs gzip magic bytes for `.svgz`).
-//!
-//! These are concrete, framework-free helpers. Extension/format *tables* (which extensions a
-//! given app accepts) stay in the app — only the mechanism lives here.
-
 use std::path::Path;
 
 /// The file's extension, lowercased and without the leading dot; `None` if it has none.

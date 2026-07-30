@@ -13,14 +13,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Decide which apps changed so we don't rebuild the other three. A change to shared code
-  # (root manifests, crates/, packages/, tauri.base.json, workflows) checks everything.
   changes:
     runs-on: ubuntu-latest
     outputs:
       rust: ${{ steps.set.outputs.rust }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v3
         id: f
         with:
@@ -66,11 +64,10 @@ jobs:
           fi
           echo "rust={\"include\":$rust}" >> "$GITHUB_OUTPUT"
 
-  # Formatting is fast and global — one check for the whole tree.
   fmt:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: rustup show # installs the toolchain pinned by rust-toolchain.toml
       - run: cargo fmt --all --check
 
@@ -82,7 +79,7 @@ jobs:
       matrix: ${{ fromJson(needs.changes.outputs.rust) }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: System deps (Tauri / webkit)
         if: matrix.deps == 'webkit'

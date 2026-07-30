@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// A tokenized button for toolbars. `variant="primary"` uses the accent; `active` marks a
-// toggled state (e.g. a view toggle or an open panel).
 withDefaults(
   defineProps<{
     variant?: "primary" | "default";

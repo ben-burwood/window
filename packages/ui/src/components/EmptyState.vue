@@ -1,8 +1,4 @@
 <script setup lang="ts">
-// Format-agnostic launch / empty screen. Knows nothing about file formats: the title, hint,
-// error text and drag state are all passed in; it only emits `open` when the button is
-// clicked. The app owns the actual OS drag-drop wiring (via @window/bridge `onFileDrop`) and
-// passes `dragging` / `error` back down.
 withDefaults(
   defineProps<{
     title: string;

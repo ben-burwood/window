@@ -1,7 +1,5 @@
 name: Release (Tauri apps)
 
-# Reusable + tag-triggered. Builds and publishes the three Tauri apps across platforms.
-# image-shutter is NOT here — it bundles via cargo-packager in release-egui.yml.
 on:
   push:
     tags: ["v*"]
@@ -17,21 +15,20 @@ jobs:
       fail-fast: false
       matrix:
         app: [data-framer, map-windower, doc-viewer]
-        platform: [macos-latest, ubuntu-22.04, windows-latest]
-        # `include` augments each matching combination with per-platform build args.
+        platform: [macos-latest, ubuntu-latest, windows-latest]
         include:
           - platform: macos-latest
             args: --target universal-apple-darwin
-          - platform: ubuntu-22.04
+          - platform: ubuntu-latest
             args: ""
           - platform: windows-latest
             args: ""
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: System deps (Linux)
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
@@ -75,6 +72,6 @@ jobs:
           # absolute path so it resolves regardless of the CLI's working directory.
           args: ${{ matrix.args }} --config ${{ github.workspace }}/tauri.base.json
           tagName: ${{ github.ref_name }}
-          releaseName: "Viewers ${{ github.ref_name }}"
+          releaseName: "Window ${{ github.ref_name }}"
           releaseDraft: true
           prerelease: false

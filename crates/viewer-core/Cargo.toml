@@ -10,5 +10,4 @@ authors.workspace = true
 [lints]
 workspace = true
 
-# Framework-free by design. No tauri/eframe/egui/wry here — enforced by `just check-core-clean`.
 [dependencies]

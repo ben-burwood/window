@@ -1,11 +1,6 @@
 /*
  * @window/ui — shared design tokens + base reset.
  *
- * One neutral token vocabulary for all three Tauri apps (decision 0005). Everything is a
- * `--vw-*` custom property so it never collides with third-party themes (AG-Grid's `--ag-*`,
- * MapLibre, PDF.js). Apps reference these tokens instead of hardcoded hex; where a third-party
- * lib has its own theme (e.g. AG-Grid), map its variables *from* these tokens.
- *
  * Light and dark are both defined; the app follows the OS via `prefers-color-scheme`.
  */
 :root {

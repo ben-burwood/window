@@ -1,29 +1,3 @@
-//! `viewer-tauri` — the Tauri plumbing shared by the three Tauri viewer apps.
-//!
-//! Extracted from the copy-pasted `AppState.startup_file` + argv `.setup()` closure +
-//! `get_startup_file` command that appeared identically in data-framer, map-windower and
-//! doc-viewer. Exposed as a builder so each app's `run()` is just builder calls plus its own
-//! state and format-specific commands.
-//!
-//! ```ignore
-//! // (illustrative — `generate_context!` needs the app's own tauri.conf.json to compile)
-//! #[cfg_attr(mobile, tauri::mobile_entry_point)]
-//! pub fn run() {
-//!     viewer_tauri::app(&["pdf"])
-//!         .invoke_handler(tauri::generate_handler![viewer_tauri::get_startup_file, app::outline])
-//!         .run(tauri::generate_context!())
-//!         .expect("error while running tauri application");
-//! }
-//! ```
-//!
-//! `generate_handler!` and `generate_context!` must be invoked in the app crate (they read
-//! the app's own commands and `tauri.conf.json`), so they can't be hidden inside `app()`;
-//! each app therefore lists `viewer_tauri::get_startup_file` in its own handler.
-//!
-//! Deferred (see `docs/decisions/`): single-instance, macOS `RunEvent::Opened` (double-click
-//! file-open), window-state persistence, and the updater. `app()` is shaped so these can be
-//! added here later without touching the apps.
-
 use tauri::{Builder, Manager, Wry};
 
 // `#[tauri::command]` emits a `#[macro_export]` helper macro that lands in the crate root's

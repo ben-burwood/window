@@ -1,8 +1,3 @@
-<script setup lang="ts">
-// Format-agnostic top bar. Pure layout + tokenized chrome; apps fill the regions with their
-// own controls via slots (`start` / `center` / `end`). The default slot maps to `start`.
-</script>
-
 <template>
   <header class="vw-toolbar">
     <div class="vw-toolbar__start">
