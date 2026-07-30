@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: rustup show          # installs the toolchain pinned by rust-toolchain.toml
+      - run: rustup show # installs the toolchain pinned by rust-toolchain.toml
       - run: cargo fmt --all --check
 
   rust:
@@ -110,7 +110,7 @@ jobs:
       - if: matrix.web != ''
         run: npm run build --workspace ${{ matrix.web }}
 
-      - run: rustup show          # installs the pinned toolchain + clippy/rustfmt
+      - run: rustup show # installs the pinned toolchain + clippy/rustfmt
       - uses: Swatinem/rust-cache@v2
         with:
           # One cache shared across app jobs, keyed on the single root Cargo.lock.

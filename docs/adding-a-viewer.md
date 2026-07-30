@@ -10,22 +10,22 @@ kinds of viewer; pick the one that matches your rendering stack.
 2. **Rust** (`apps/<name>/src-tauri/`):
    - `Cargo.toml`: use the workspace fields (`version.workspace = true`, etc.), depend on
      `viewer-core`, `viewer-tauri`, `tauri`, and the two plugin crates via `{ workspace = true }`
-     (the plugins must stay *direct* deps so their ACL permissions are discovered), plus your
+     (the plugins must stay _direct_ deps so their ACL permissions are discovered), plus your
      format-specific crates.
    - `src/main.rs`: `fn main() { <name>_lib::run() }`.
    - `src/lib.rs`: `viewer_tauri::app(&["ext"]) .invoke_handler(tauri::generate_handler![
-     viewer_tauri::get_startup_file, /* your commands */ ]).run(tauri::generate_context!())`.
+viewer_tauri::get_startup_file, /* your commands */ ]).run(tauri::generate_context!())`.
      Keep format logic in one module beside `lib.rs`.
    - Add the crate to the root `Cargo.toml` `[workspace] members`.
 3. **Frontend** (`apps/<name>/`):
-   - `package.json`: depend on `@viewers/ui`, `@viewers/bridge` (and `@viewers/config` in dev),
+   - `package.json`: depend on `@window/ui`, `@window/bridge` (and `@window/config` in dev),
      named `"*"`.
    - `vite.config.ts`: `export default viewerConfig({ manualChunks: { … } })`.
-   - `tsconfig.json`: `"extends": "@viewers/config/tsconfig.base.json"`.
-   - `src/main.ts`: `import "@viewers/ui/theme.css"` first.
-   - `src/bridge.ts`: this app's typed `invoke` wrappers (built on `@viewers/bridge`). Never
+   - `tsconfig.json`: `"extends": "@window/config/tsconfig.base.json"`.
+   - `src/main.ts`: `import "@window/ui/theme.css"` first.
+   - `src/bridge.ts`: this app's typed `invoke` wrappers (built on `@window/bridge`). Never
      call `invoke("…")` in a component — go through the bridge.
-   - Use `<Toolbar>`, `<ToolbarButton>`, `<EmptyState>` from `@viewers/ui`; style with the
+   - Use `<Toolbar>`, `<ToolbarButton>`, `<EmptyState>` from `@window/ui`; style with the
      `--vw-*` tokens, never hardcoded hex.
 4. **Config**: keep `tauri.conf.json` minimal (productName, identifier, version,
    `build.frontendDist`, `app.windows`, `bundle.icon`, `bundle.fileAssociations`, and
@@ -37,7 +37,7 @@ kinds of viewer; pick the one that matches your rendering stack.
 
 ## A new egui viewer (like image-shutter)
 
-The crate *is* the app — no `src-tauri/`, no frontend. Depend on `viewer-core` for the shared
+The crate _is_ the app — no `src-tauri/`, no frontend. Depend on `viewer-core` for the shared
 framework-free helpers (sniffing, etc.), keep your `[package.metadata.packager]` config for
 `cargo-packager`, add the crate to `[workspace] members`, and add a matrix row to
 `release-egui.yml`. Do **not** pull it into the Tauri shared frontend packages.

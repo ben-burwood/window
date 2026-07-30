@@ -1,69 +1,23 @@
-# Task runner for the viewers monorepo. Recipes are fleshed out per phase.
+set shell := ["powershell.exe", "-c"]
 
 default:
     @just --list
 
-# --- Rust ---------------------------------------------------------------------
+init:
+    npm install
 
-# Build every crate in the workspace (shared target/).
+dev app:
+    npm run tauri --workspace {{app}} -- dev --config ../../tauri.base.json
+
 build:
     cargo build --workspace
 
-# Format all Rust code.
-fmt:
-    cargo fmt --all
-
-# Check formatting without writing (CI).
-fmt-check:
-    cargo fmt --all -- --check
-
-# Clippy across the workspace, warnings are errors (CI).
-clippy:
-    cargo clippy --workspace --all-targets -- -D warnings
-
-# Run all Rust tests.
 test:
     cargo test --workspace
 
-# Enforce that viewer-core stays framework-free (Phase 3 gate).
-# Fails if tauri/eframe/egui/wry appear in its dependency tree.
-check-core-clean:
-    cargo tree -p viewer-core -e no-dev | grep -Eiq 'tauri|eframe|egui|wry' && (echo "viewer-core is not framework-free" && exit 1) || echo "viewer-core is framework-free"
+fmt:
+    cargo fmt --all
+    vp fmt --write
 
-# --- Frontend -----------------------------------------------------------------
-
-# Install all JS workspace dependencies.
-install:
-    npm install
-
-# Type-check + build every app frontend (produces each app's dist/).
-build-web:
-    npm run build --workspaces --if-present
-
-# Type-check + build a single app frontend, e.g. `just build-app data-framer`.
-build-app app:
-    npm run build --workspace {{app}}
-
-# --- Tauri bundling -----------------------------------------------------------
-# The shared tauri.base.json (publisher/category/targets/build commands) is merged in via
-# `--config` on every bundle/dev. This is the sanctioned path — building a Tauri app WITHOUT
-# the base (e.g. bare `npm run tauri build`) omits that metadata. Applies to the three Tauri
-# apps only; image-shutter bundles via cargo-packager (see `package-egui`).
-
-# Bundle a Tauri app with the base config merged in, e.g. `just bundle data-framer`.
-bundle app:
-    cd apps/{{app}} && npm run tauri -- build --config ../../tauri.base.json
-
-# Run a Tauri app in dev with the base config merged in.
-tauri-dev app:
-    cd apps/{{app}} && npm run tauri -- dev --config ../../tauri.base.json
-
-# Bundle the egui app (image-shutter) via cargo-packager (needs `cargo install cargo-packager`).
-package-egui:
-    cd apps/image-shutter && cargo packager --release
-
-# --- Meta ---------------------------------------------------------------------
-
-# Verify the workspace resolves (Phase 1 gate).
-check:
-    cargo metadata --format-version 1 > /dev/null && echo "cargo metadata OK"
+lint:
+    cargo clippy --workspace --all-targets -- -D warnings

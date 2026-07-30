@@ -1,9 +1,9 @@
 // data-framer's typed IPC wrappers. The only place this app's invoke() string literals live;
-// built on the shared @viewers/bridge. Components import from here, never call invoke directly.
-import { invoke } from "@viewers/bridge";
+// built on the shared @window/bridge. Components import from here, never call invoke directly.
+import { invoke } from "@window/bridge";
 import type { FileInfo, FilterSpec, RowsResponse } from "./types";
 
-export { getStartupFile, openFile, saveFile } from "@viewers/bridge";
+export { getStartupFile, openFile, saveFile } from "@window/bridge";
 
 // ---------------------------------------------------------------------------
 // Map-feature shapes returned by the map commands. Each carries `idx` — the

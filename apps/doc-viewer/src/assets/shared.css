@@ -1,5 +1,5 @@
 /* doc-viewer app-specific globals. Base reset, typography and buttons come from
-   @viewers/ui/theme.css (imported first in main.ts). */
+   @window/ui/theme.css (imported first in main.ts). */
 #app {
   display: flex;
   flex-direction: column;

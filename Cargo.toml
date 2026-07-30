@@ -4,12 +4,12 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/viewer-core",
-    "crates/viewer-tauri",
-    "apps/data-framer/src-tauri",
-    "apps/map-windower/src-tauri",
-    "apps/doc-viewer/src-tauri",
-    "apps/image-shutter",
+  "crates/viewer-core",
+  "crates/viewer-tauri",
+  "apps/data-framer/src-tauri",
+  "apps/map-windower/src-tauri",
+  "apps/doc-viewer/src-tauri",
+  "apps/image-shutter",
 ]
 
 [workspace.package]

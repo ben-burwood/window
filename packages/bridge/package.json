@@ -1,9 +1,9 @@
 {
-  "name": "@viewers/bridge",
+  "name": "@window/bridge",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "Typed Tauri IPC layer for the viewer apps: the single home of invoke() string literals plus dialog/asset helpers.",
+  "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },

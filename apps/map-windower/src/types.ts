@@ -35,13 +35,9 @@ export function toFeatureCollection(input: unknown): FeatureCollection {
     case "GeometryCollection":
       return {
         type: "FeatureCollection",
-        features: [
-          { type: "Feature", properties: {}, geometry: input as Geometry },
-        ],
+        features: [{ type: "Feature", properties: {}, geometry: input as Geometry }],
       };
     default:
-      throw new Error(
-        `Unsupported GeoJSON type: ${obj.type ?? "(missing 'type' field)"}`,
-      );
+      throw new Error(`Unsupported GeoJSON type: ${obj.type ?? "(missing 'type' field)"}`);
   }
 }

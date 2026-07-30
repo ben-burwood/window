@@ -3,13 +3,14 @@
 **Status:** accepted (Phase 7)
 
 ## Decisions
+
 - **`ci.yml` uses a `dorny/paths-filter` dynamic matrix.** A `changes` job maps changed paths
   to a JSON matrix of affected crates; a change under `apps/image-shutter/` runs only
   image-shutter's job, while a change to shared code (root manifests, `crates/`, `packages/`,
   `tauri.base.json`, workflows) runs everything. `fmt` is a single fast whole-tree job.
 - **Tauri app crates build their frontend before `cargo clippy`/`test`.** `generate_context!`
   embeds `../dist` at compile time, so the job runs `npm ci` + `npm run build --workspace
-  <app>` first — which also performs the `vue-tsc` typecheck (so no separate typecheck job).
+<app>` first — which also performs the `vue-tsc` typecheck (so no separate typecheck job).
 - **One shared cargo cache** via `Swatinem/rust-cache` keyed on the single root `Cargo.lock`
   (`shared-key`), so the shared `target/` pays off across app jobs.
 - **`release-tauri.yml`** is reusable (`workflow_call`) + tag-triggered, a matrix over the
@@ -26,6 +27,7 @@
   root `.github/`, so they were inactive clutter).
 
 ## Consequences
+
 - Selection logic verified by local simulation (image-shutter-only → only its job; shared →
   all). The remaining gate — "a tag produces artifacts for all four apps" — can only be
   exercised by pushing a tag on GitHub; the workflow YAML is syntactically valid but unrun.

@@ -58,7 +58,7 @@ const isFetching = computed(() => pendingFetches.value > 0);
 // Column defs
 // ---------------------------------------------------------------------------
 const visibleColumns = computed(() =>
-  props.columns.filter(c => props.activeColumnVisibility[c.name] !== false)
+  props.columns.filter((c) => props.activeColumnVisibility[c.name] !== false),
 );
 
 // Nested cells (list/struct) arrive from the backend as real JSON arrays/objects.
@@ -77,11 +77,11 @@ const columnDefs = computed<ColDef[]>(() =>
     headerName: c.name,
     ...(NUMERIC_DTYPES.includes(c.dtype) ? { type: "numericColumn" } : {}),
     ...(NESTED_DTYPES.includes(c.dtype) ? { valueFormatter: jsonValueFormatter } : {}),
-  }))
+  })),
 );
 
 const selectedColumnNames = computed(() => {
-  const visible = visibleColumns.value.map(c => c.name);
+  const visible = visibleColumns.value.map((c) => c.name);
   return visible.length < props.columns.length ? visible : [];
 });
 
@@ -149,7 +149,9 @@ function onCellContextMenu(event: CellContextMenuEvent) {
 // ---------------------------------------------------------------------------
 watch(
   [() => props.activeFilters, () => props.activeColumnVisibility],
-  () => { gridApi.value?.purgeInfiniteCache(); },
+  () => {
+    gridApi.value?.purgeInfiniteCache();
+  },
   { deep: true },
 );
 </script>

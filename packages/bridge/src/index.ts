@@ -1,5 +1,5 @@
 /**
- * `@viewers/bridge` — the typed boundary between the Vue frontends and the Rust backends.
+ * `@window/bridge` — the typed boundary between the Vue frontends and the Rust backends.
  *
  * This is the single place where shared `invoke("...")` string literals live. Components must
  * never call `invoke` with a raw string directly; they import a typed function from here (for

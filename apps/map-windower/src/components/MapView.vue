@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
-import maplibregl, {
-  type StyleSpecification,
-  type MapGeoJSONFeature,
-} from "maplibre-gl";
+import maplibregl, { type StyleSpecification, type MapGeoJSONFeature } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { PMTiles, Protocol, TileType } from "pmtiles";
-import { convertFileSrc } from "@viewers/bridge";
+import { convertFileSrc } from "@window/bridge";
 import type { FeatureCollection } from "geojson";
 import type { LoadedSource } from "../types";
 
@@ -36,8 +33,16 @@ function ensurePmtilesProtocol(): Protocol {
 
 // Distinct colors so stacked vector layers stay legible over the base map.
 const PALETTE = [
-  "#2563eb", "#dc2626", "#16a34a", "#9333ea", "#ea580c",
-  "#0891b2", "#ca8a04", "#db2777", "#4f46e5", "#65a30d",
+  "#2563eb",
+  "#dc2626",
+  "#16a34a",
+  "#9333ea",
+  "#ea580c",
+  "#0891b2",
+  "#ca8a04",
+  "#db2777",
+  "#4f46e5",
+  "#65a30d",
 ];
 
 // Plain OpenStreetMap raster tiles — no API key required.
@@ -69,10 +74,7 @@ function propertiesHtml(feature: MapGeoJSONFeature): string {
     return `<div class="feature-popup"><span class="empty">No properties</span></div>`;
   }
   const rows = keys
-    .map(
-      (k) =>
-        `<tr><th>${escapeHtml(k)}</th><td>${escapeHtml(props[k])}</td></tr>`,
-    )
+    .map((k) => `<tr><th>${escapeHtml(k)}</th><td>${escapeHtml(props[k])}</td></tr>`)
     .join("");
   return `<div class="feature-popup"><table>${rows}</table></div>`;
 }
@@ -159,9 +161,7 @@ function addGeometryLayers(
       "circle-radius": style.circleRadius,
       "circle-color": style.circleColor,
       "circle-opacity": style.circleOpacity,
-      ...(style.circleStroke
-        ? { "circle-stroke-color": "#ffffff", "circle-stroke-width": 1 }
-        : {}),
+      ...(style.circleStroke ? { "circle-stroke-color": "#ffffff", "circle-stroke-width": 1 } : {}),
     },
   });
 
@@ -202,8 +202,7 @@ async function renderPmtiles(map: maplibregl.Map, path: string) {
   protocol.add(archive);
 
   const header = await archive.getHeader();
-  const isVector =
-    header.tileType === TileType.Mvt || header.tileType === TileType.Mlt;
+  const isVector = header.tileType === TileType.Mvt || header.tileType === TileType.Mlt;
 
   if (isVector) {
     map.addSource("pmtiles", { type: "vector", url: pmUrl });
@@ -233,7 +232,10 @@ async function renderPmtiles(map: maplibregl.Map, path: string) {
         },
       );
     });
-    emit("layers", vectorLayers.map((vl) => vl.id));
+    emit(
+      "layers",
+      vectorLayers.map((vl) => vl.id),
+    );
   } else {
     map.addSource("pmtiles", { type: "raster", url: pmUrl, tileSize: 256 });
     map.addLayer({

@@ -31,8 +31,18 @@
     ],
     "fileAssociations": [
       { "ext": ["geojson"], "name": "GeoJSON", "description": "GeoJSON", "role": "Viewer" },
-      { "ext": ["pmtiles"], "name": "PMTiles", "description": "PMTiles map archive", "role": "Viewer" },
-      { "ext": ["geoparquet"], "name": "GeoParquet", "description": "GeoParquet vector data", "role": "Viewer" }
+      {
+        "ext": ["pmtiles"],
+        "name": "PMTiles",
+        "description": "PMTiles map archive",
+        "role": "Viewer"
+      },
+      {
+        "ext": ["geoparquet"],
+        "name": "GeoParquet",
+        "description": "GeoParquet vector data",
+        "role": "Viewer"
+      }
     ]
   }
 }

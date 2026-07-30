@@ -3,15 +3,17 @@
 **Status:** accepted (Phase 5)
 
 ## Context
+
 Phase 5 extracts shared frontend packages. Two spec points needed interpreting against the
 audit reality.
 
 ## Decisions
-- **`@viewers/bridge` holds shared invoke literals + a generic `invoke`.** The audit found
+
+- **`@window/bridge` holds shared invoke literals + a generic `invoke`.** The audit found
   `load_file` means different things in data-framer vs map-windower, so app-specific commands
   must **not** live in the shared bridge (that would make it format-aware — the migration's
   primary failure mode). Instead: shared commands (`get_startup_file`) and dialog/asset
-  helpers live in `@viewers/bridge`; each app keeps a single local `src/bridge.ts` for its own
+  helpers live in `@window/bridge`; each app keeps a single local `src/bridge.ts` for its own
   typed command wrappers, built on the re-exported `invoke`. Components never call `invoke`
   with a raw string — the literals are confined to bridge modules. (This is the spirit of the
   spec's "invoke only in viewer-bridge" gate; a strict single-file reading is impossible
@@ -22,9 +24,10 @@ audit reality.
 - **No `viewer-viewport` package.** No `useViewport` composable exists: map pan/zoom is
   MapLibre-native and doc-viewer's zoom is locked inside `PdfView.vue`. Creating a shared
   composable now would be speculative; deferred until a real second consumer appears.
-- **`@viewers/config` is a Vite *factory* + tsconfig base + (opt-in) eslint config**, matching
+- **`@window/config` is a Vite _factory_ + tsconfig base + (opt-in) eslint config**, matching
   the spec: each app calls `viewerConfig({ manualChunks })` for its own lazy chunks.
 
 ## Consequences
+
 - The shared frontend packages carry zero format knowledge.
 - `grep "invoke(" apps/` is confined to each app's `bridge.ts`; components are clean.

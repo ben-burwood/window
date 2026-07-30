@@ -1,4 +1,4 @@
-import "@viewers/ui/theme.css";
+import "@window/ui/theme.css";
 import { createApp } from "vue";
 import App from "./App.vue";
 import "./assets/shared.css";

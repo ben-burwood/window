@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
-import { EmptyState, Toolbar, ToolbarButton } from "@viewers/ui";
+import { EmptyState, Toolbar, ToolbarButton } from "@window/ui";
 import PdfView from "./components/PdfView.vue";
 import { isPdf, PDF_EXTENSIONS, type LoadedSource, type ViewerState } from "./types";
 import { getStartupFile, openFile, convertFileSrc, onFileDrop } from "./bridge";
@@ -163,7 +163,11 @@ onUnmounted(() => {
           <span class="muted find-count">
             {{ st.findCount ? `${st.findIndex}/${st.findCount}` : findQuery ? "0/0" : "" }}
           </span>
-          <ToolbarButton title="Previous match" :disabled="!st.findCount" @click="viewer?.findPrev()">
+          <ToolbarButton
+            title="Previous match"
+            :disabled="!st.findCount"
+            @click="viewer?.findPrev()"
+          >
             ‹
           </ToolbarButton>
           <ToolbarButton title="Next match" :disabled="!st.findCount" @click="viewer?.findNext()">

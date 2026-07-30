@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { EmptyState, Toolbar, ToolbarButton } from "@viewers/ui";
+import { EmptyState, Toolbar, ToolbarButton } from "@window/ui";
 import MapView from "./components/MapView.vue";
 import { toFeatureCollection, fileKind, type LoadedSource } from "./types";
 import { getStartupFile, openFile, loadGeojsonText, loadGeoparquetText } from "./bridge";
@@ -25,7 +25,8 @@ async function loadFileByPath(path: string) {
       // The map reads the archive directly via the pmtiles:// protocol.
       loaded.value = { kind: "pmtiles", name, path };
     } else {
-      const text = kind === "geoparquet" ? await loadGeoparquetText(path) : await loadGeojsonText(path);
+      const text =
+        kind === "geoparquet" ? await loadGeoparquetText(path) : await loadGeojsonText(path);
       const data = toFeatureCollection(JSON.parse(text));
       loaded.value = { kind: "geojson", name, data };
     }

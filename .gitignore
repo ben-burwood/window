@@ -19,3 +19,9 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+
+# sample files
+*.csv
+*.geojson
+*.parquet
+*.geoparquet

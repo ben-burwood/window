@@ -34,7 +34,13 @@ geozero = { workspace = true }
 # Format-specific — stays in the app.
 # Snappy + Zstd cover essentially all GeoParquet files; lz4 is skipped because
 # parquet's lz4 feature pulls an lz4_flex version the index can't resolve here.
-parquet = { version = "59.1.0", default-features = false, features = ["arrow", "snap", "zstd", "brotli", "flate2-zlib-rs"] }
+parquet = { version = "59.1.0", default-features = false, features = [
+  "arrow",
+  "snap",
+  "zstd",
+  "brotli",
+  "flate2-zlib-rs",
+] }
 arrow-array = "59.1.0"
 arrow-schema = "59.1.0"
 arrow-json = "59.1.0"

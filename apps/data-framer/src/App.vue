@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, defineAsyncComponent, onMounted } from "vue";
 import type { ColumnState, GridApi } from "ag-grid-community";
-import { EmptyState, Toolbar, ToolbarButton } from "@viewers/ui";
+import { EmptyState, Toolbar, ToolbarButton } from "@window/ui";
 import type { FileInfo, FilterSpec } from "./types";
-import { getStartupFile, openFile, saveFile, loadFile, exportFile as exportFileCmd } from "./bridge";
+import {
+  getStartupFile,
+  openFile,
+  saveFile,
+  loadFile,
+  exportFile as exportFileCmd,
+} from "./bridge";
 import FilterPanel from "./components/FilterPanel.vue";
 import SelectPanel from "./components/SelectPanel.vue";
 import DataGrid from "./components/DataGrid.vue";
-const MapView   = defineAsyncComponent(() => import("./components/MapView.vue"));
+const MapView = defineAsyncComponent(() => import("./components/MapView.vue"));
 const ChartView = defineAsyncComponent(() => import("./components/ChartView.vue"));
 
 // ---------------------------------------------------------------------------
@@ -32,27 +38,28 @@ const error = ref<string | null>(null);
 // ---------------------------------------------------------------------------
 const LAT_NAMES = ["lat", "latitude"];
 const LON_NAMES = ["lon", "lng", "longitude"];
-const H3_NAMES  = ["h3", "h3_index", "h3index", "h3_cell", "h3cell", "h3point"];
+const H3_NAMES = ["h3", "h3_index", "h3index", "h3_cell", "h3cell", "h3point"];
 const GEOM_NAMES = ["geometry", "geom", "the_geom", "wkb_geometry", "wkb"];
 
 const fileName = computed(() => fileInfo.value?.path.split(/[\\/]/).pop() ?? "");
 
-const latColumn = computed(() =>
-  fileInfo.value?.columns.find(c => LAT_NAMES.includes(c.name.toLowerCase()))?.name ?? null
+const latColumn = computed(
+  () => fileInfo.value?.columns.find((c) => LAT_NAMES.includes(c.name.toLowerCase()))?.name ?? null,
 );
-const lonColumn = computed(() =>
-  fileInfo.value?.columns.find(c => LON_NAMES.includes(c.name.toLowerCase()))?.name ?? null
+const lonColumn = computed(
+  () => fileInfo.value?.columns.find((c) => LON_NAMES.includes(c.name.toLowerCase()))?.name ?? null,
 );
-const h3Column = computed(() =>
-  fileInfo.value?.columns.find(c => H3_NAMES.includes(c.name.toLowerCase()))?.name ?? null
+const h3Column = computed(
+  () => fileInfo.value?.columns.find((c) => H3_NAMES.includes(c.name.toLowerCase()))?.name ?? null,
 );
-const geomColumn = computed(() =>
-  fileInfo.value?.columns.find(
-    c => c.dtype === "binary" && GEOM_NAMES.includes(c.name.toLowerCase())
-  )?.name ?? null
+const geomColumn = computed(
+  () =>
+    fileInfo.value?.columns.find(
+      (c) => c.dtype === "binary" && GEOM_NAMES.includes(c.name.toLowerCase()),
+    )?.name ?? null,
 );
-const hasMapData = computed(() =>
-  (!!latColumn.value && !!lonColumn.value) || !!h3Column.value || !!geomColumn.value
+const hasMapData = computed(
+  () => (!!latColumn.value && !!lonColumn.value) || !!h3Column.value || !!geomColumn.value,
 );
 
 // Auto-detect the best default x-axis column for charts:
@@ -60,9 +67,9 @@ const hasMapData = computed(() =>
 const defaultXColumn = computed(() => {
   const cols = fileInfo.value?.columns ?? [];
   return (
-    cols.find(c => c.dtype === "datetime")?.name ??
-    cols.find(c => c.dtype === "date")?.name ??
-    cols.find(c => c.dtype === "integer" || c.dtype === "float" || c.dtype === "decimal")?.name ??
+    cols.find((c) => c.dtype === "datetime")?.name ??
+    cols.find((c) => c.dtype === "date")?.name ??
+    cols.find((c) => c.dtype === "integer" || c.dtype === "float" || c.dtype === "decimal")?.name ??
     cols[0]?.name ??
     null
   );
@@ -70,7 +77,8 @@ const defaultXColumn = computed(() => {
 
 const hiddenColumnCount = computed(() => {
   if (!fileInfo.value) return 0;
-  return fileInfo.value.columns.filter(c => activeColumnVisibility.value[c.name] === false).length;
+  return fileInfo.value.columns.filter((c) => activeColumnVisibility.value[c.name] === false)
+    .length;
 });
 
 // ---------------------------------------------------------------------------
@@ -119,25 +127,26 @@ onMounted(async () => {
 // ---------------------------------------------------------------------------
 async function exportFile() {
   const dest = await saveFile([
-    { name: "CSV",     extensions: ["csv"]     },
+    { name: "CSV", extensions: ["csv"] },
     { name: "Parquet", extensions: ["parquet"] },
   ]);
   if (!dest) return;
 
-  const sortedCol = (gridApi.value?.getColumnState() as ColumnState[] ?? [])
-    .find(c => c.sort != null);
+  const sortedCol = ((gridApi.value?.getColumnState() as ColumnState[]) ?? []).find(
+    (c) => c.sort != null,
+  );
 
   const allCols = fileInfo.value!.columns;
-  const visible = allCols.filter(c => activeColumnVisibility.value[c.name] !== false);
-  const columns = visible.length < allCols.length ? visible.map(c => c.name) : [];
+  const visible = allCols.filter((c) => activeColumnVisibility.value[c.name] !== false);
+  const columns = visible.length < allCols.length ? visible.map((c) => c.name) : [];
 
   exportState.value = "exporting";
   try {
     await exportFileCmd({
       dest,
-      sortCol:  sortedCol?.colId  ?? null,
+      sortCol: sortedCol?.colId ?? null,
       sortDesc: sortedCol?.sort === "desc",
-      filters:  activeFilters.value,
+      filters: activeFilters.value,
       columns,
     });
   } catch (err) {
@@ -171,25 +180,35 @@ function onColumnsReset() {
         <span class="file-name">{{ fileName }}</span>
         <span class="row-count">
           <template v-if="activeFilters.length > 0">
-            {{ filteredRowCount.toLocaleString() }} / {{ fileInfo!.total_rows.toLocaleString() }} rows
-          </template>
-          <template v-else>
+            {{ filteredRowCount.toLocaleString() }} /
             {{ fileInfo!.total_rows.toLocaleString() }} rows
           </template>
+          <template v-else> {{ fileInfo!.total_rows.toLocaleString() }} rows </template>
         </span>
       </template>
 
       <template #center>
         <ToolbarButton :active="filterPanelOpen" @click="filterPanelOpen = !filterPanelOpen">
-          Filters<span v-if="activeFilters.length > 0" class="badge">{{ activeFilters.length }}</span>
+          Filters<span v-if="activeFilters.length > 0" class="badge">{{
+            activeFilters.length
+          }}</span>
         </ToolbarButton>
         <ToolbarButton :active="columnPanelOpen" @click="columnPanelOpen = !columnPanelOpen">
           Columns<span v-if="hiddenColumnCount > 0" class="badge">{{ hiddenColumnCount }}</span>
         </ToolbarButton>
         <div class="view-toggle">
-          <ToolbarButton :active="currentView === 'table'" @click="currentView = 'table'">Table</ToolbarButton>
-          <ToolbarButton v-if="hasMapData" :active="currentView === 'map'" @click="currentView = 'map'">Map</ToolbarButton>
-          <ToolbarButton :active="currentView === 'chart'" @click="currentView = 'chart'">Chart</ToolbarButton>
+          <ToolbarButton :active="currentView === 'table'" @click="currentView = 'table'"
+            >Table</ToolbarButton
+          >
+          <ToolbarButton
+            v-if="hasMapData"
+            :active="currentView === 'map'"
+            @click="currentView = 'map'"
+            >Map</ToolbarButton
+          >
+          <ToolbarButton :active="currentView === 'chart'" @click="currentView = 'chart'"
+            >Chart</ToolbarButton
+          >
         </div>
       </template>
 
@@ -256,7 +275,7 @@ function onColumnsReset() {
 
 <style scoped>
 .app {
-  /* AG Grid Quartz design tokens — driven by the shared @viewers/ui --vw-* tokens so the grid,
+  /* AG Grid Quartz design tokens — driven by the shared @window/ui --vw-* tokens so the grid,
      toolbar, panels and shared.css all follow one theme. */
   --ag-active-color: var(--vw-accent);
   --ag-background-color: var(--vw-bg);

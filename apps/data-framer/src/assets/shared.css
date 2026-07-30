@@ -1,5 +1,5 @@
 /* data-framer app-specific globals. Base reset, typography and the shared --vw-* tokens come
-   from @viewers/ui/theme.css (imported first in main.ts). Everything here is chrome that the
+   from @window/ui/theme.css (imported first in main.ts). Everything here is chrome that the
    shared UI package doesn't own (the fetch progress bar, the filter/column panels). */
 #app {
   display: flex;
@@ -29,8 +29,12 @@
 }
 
 @keyframes fetch-bar {
-  0%   { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 /* Panel base layout — used by FilterPanel and SelectPanel */

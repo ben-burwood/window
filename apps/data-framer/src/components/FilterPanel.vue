@@ -3,11 +3,21 @@ import { ref } from "vue";
 import type { ColumnInfo, Dtype, FilterSpec } from "../types";
 
 type FilterOp =
-  | "eq" | "neq"
-  | "gt" | "gte" | "lt" | "lte" | "between"
-  | "contains" | "not_contains" | "starts_with" | "ends_with"
-  | "is_true" | "is_false"
-  | "is_null" | "is_not_null";
+  | "eq"
+  | "neq"
+  | "gt"
+  | "gte"
+  | "lt"
+  | "lte"
+  | "between"
+  | "contains"
+  | "not_contains"
+  | "starts_with"
+  | "ends_with"
+  | "is_true"
+  | "is_false"
+  | "is_null"
+  | "is_not_null";
 
 interface OpDef {
   label: string;
@@ -26,58 +36,58 @@ const emit = defineEmits<{
 // Op definitions
 // ---------------------------------------------------------------------------
 const NULL_OPS: OpDef[] = [
-  { label: "is null",     op: "is_null",     hasValue: false, hasTwoValues: false },
+  { label: "is null", op: "is_null", hasValue: false, hasTwoValues: false },
   { label: "is not null", op: "is_not_null", hasValue: false, hasTwoValues: false },
 ];
 
 const NUMERIC_OPS: OpDef[] = [
-  { label: "equals",                op: "eq",      hasValue: true,  hasTwoValues: false },
-  { label: "not equals",            op: "neq",     hasValue: true,  hasTwoValues: false },
-  { label: "greater than",          op: "gt",      hasValue: true,  hasTwoValues: false },
-  { label: "greater than or equal", op: "gte",     hasValue: true,  hasTwoValues: false },
-  { label: "less than",             op: "lt",      hasValue: true,  hasTwoValues: false },
-  { label: "less than or equal",    op: "lte",     hasValue: true,  hasTwoValues: false },
-  { label: "between",               op: "between", hasValue: true,  hasTwoValues: true  },
+  { label: "equals", op: "eq", hasValue: true, hasTwoValues: false },
+  { label: "not equals", op: "neq", hasValue: true, hasTwoValues: false },
+  { label: "greater than", op: "gt", hasValue: true, hasTwoValues: false },
+  { label: "greater than or equal", op: "gte", hasValue: true, hasTwoValues: false },
+  { label: "less than", op: "lt", hasValue: true, hasTwoValues: false },
+  { label: "less than or equal", op: "lte", hasValue: true, hasTwoValues: false },
+  { label: "between", op: "between", hasValue: true, hasTwoValues: true },
   ...NULL_OPS,
 ];
 
 const DATE_OPS: OpDef[] = [
-  { label: "equals",       op: "eq",      hasValue: true,  hasTwoValues: false },
-  { label: "not equals",   op: "neq",     hasValue: true,  hasTwoValues: false },
-  { label: "after",        op: "gt",      hasValue: true,  hasTwoValues: false },
-  { label: "after or on",  op: "gte",     hasValue: true,  hasTwoValues: false },
-  { label: "before",       op: "lt",      hasValue: true,  hasTwoValues: false },
-  { label: "before or on", op: "lte",     hasValue: true,  hasTwoValues: false },
-  { label: "between",      op: "between", hasValue: true,  hasTwoValues: true  },
+  { label: "equals", op: "eq", hasValue: true, hasTwoValues: false },
+  { label: "not equals", op: "neq", hasValue: true, hasTwoValues: false },
+  { label: "after", op: "gt", hasValue: true, hasTwoValues: false },
+  { label: "after or on", op: "gte", hasValue: true, hasTwoValues: false },
+  { label: "before", op: "lt", hasValue: true, hasTwoValues: false },
+  { label: "before or on", op: "lte", hasValue: true, hasTwoValues: false },
+  { label: "between", op: "between", hasValue: true, hasTwoValues: true },
   ...NULL_OPS,
 ];
 
 const OPS_BY_DTYPE: Record<Dtype, OpDef[]> = {
   string: [
-    { label: "equals",       op: "eq",          hasValue: true,  hasTwoValues: false },
-    { label: "not equals",   op: "neq",         hasValue: true,  hasTwoValues: false },
-    { label: "contains",     op: "contains",    hasValue: true,  hasTwoValues: false },
-    { label: "not contains", op: "not_contains",hasValue: true,  hasTwoValues: false },
-    { label: "starts with",  op: "starts_with", hasValue: true,  hasTwoValues: false },
-    { label: "ends with",    op: "ends_with",   hasValue: true,  hasTwoValues: false },
+    { label: "equals", op: "eq", hasValue: true, hasTwoValues: false },
+    { label: "not equals", op: "neq", hasValue: true, hasTwoValues: false },
+    { label: "contains", op: "contains", hasValue: true, hasTwoValues: false },
+    { label: "not contains", op: "not_contains", hasValue: true, hasTwoValues: false },
+    { label: "starts with", op: "starts_with", hasValue: true, hasTwoValues: false },
+    { label: "ends with", op: "ends_with", hasValue: true, hasTwoValues: false },
     ...NULL_OPS,
   ],
-  integer:  NUMERIC_OPS,
-  float:    NUMERIC_OPS,
+  integer: NUMERIC_OPS,
+  float: NUMERIC_OPS,
   boolean: [
-    { label: "is true",  op: "is_true",  hasValue: false, hasTwoValues: false },
+    { label: "is true", op: "is_true", hasValue: false, hasTwoValues: false },
     { label: "is false", op: "is_false", hasValue: false, hasTwoValues: false },
     ...NULL_OPS,
   ],
-  date:     DATE_OPS,
+  date: DATE_OPS,
   datetime: DATE_OPS,
-  decimal:  NUMERIC_OPS,
+  decimal: NUMERIC_OPS,
   categorical: NULL_OPS,
-  time:        NULL_OPS,
-  duration:    NULL_OPS,
-  binary:      NULL_OPS,
-  list:        NULL_OPS,
-  struct:      NULL_OPS,
+  time: NULL_OPS,
+  duration: NULL_OPS,
+  binary: NULL_OPS,
+  list: NULL_OPS,
+  struct: NULL_OPS,
 };
 
 // ---------------------------------------------------------------------------
@@ -90,7 +100,7 @@ const pendingFilters = ref<FilterSpec[]>([]);
 // ---------------------------------------------------------------------------
 function opDefsForFilter(f: FilterSpec): OpDef[] {
   const col = props.columns.find((c) => c.name === f.column);
-  return col ? OPS_BY_DTYPE[col.dtype] ?? [] : [];
+  return col ? (OPS_BY_DTYPE[col.dtype] ?? []) : [];
 }
 
 function currentOpDef(f: FilterSpec): OpDef | undefined {
@@ -111,10 +121,14 @@ function inputTypeForFilter(f: FilterSpec): string {
   switch (col?.dtype) {
     case "integer":
     case "float":
-    case "decimal":  return "number";
-    case "date":     return "date";
-    case "datetime": return "datetime-local";
-    default:         return "text";
+    case "decimal":
+      return "number";
+    case "date":
+      return "date";
+    case "datetime":
+      return "datetime-local";
+    default:
+      return "text";
   }
 }
 
@@ -144,7 +158,10 @@ function applyFilters() {
   for (const f of pendingFilters.value) {
     const def = currentOpDef(f);
     if (!def) continue;
-    if ((def.hasValue && !String(f.value ?? "").trim()) || (def.hasTwoValues && !String(f.value2 ?? "").trim())) {
+    if (
+      (def.hasValue && !String(f.value ?? "").trim()) ||
+      (def.hasTwoValues && !String(f.value2 ?? "").trim())
+    ) {
       alert("Please fill in all filter values before applying.");
       return;
     }
@@ -152,12 +169,12 @@ function applyFilters() {
 
   const dtype = (col: string) => props.columns.find((c) => c.name === col)?.dtype ?? "string";
   const filters: FilterSpec[] = pendingFilters.value.map((f) => {
-    const val  = String(f.value  ?? "");
+    const val = String(f.value ?? "");
     const val2 = String(f.value2 ?? "");
     const isDatetime = dtype(f.column) === "datetime";
     return {
       ...f,
-      value:  isDatetime ? normalizeDateTime(val)  : val,
+      value: isDatetime ? normalizeDateTime(val) : val,
       value2: isDatetime ? normalizeDateTime(val2) : val2,
     };
   });
@@ -233,7 +250,10 @@ function clearFilters() {
 .filter-value:focus {
   outline: none;
   border-color: var(--ag-input-focus-border-color, var(--ag-active-color, #2196f3));
-  box-shadow: var(--ag-input-focus-box-shadow, 0 0 0 3px color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 47%));
+  box-shadow: var(
+    --ag-input-focus-box-shadow,
+    0 0 0 3px color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 47%)
+  );
 }
 
 .filter-select.op-select {

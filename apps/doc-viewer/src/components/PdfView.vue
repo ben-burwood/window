@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, nextTick, ref, watch } from "vue";
 import * as pdfjsLib from "pdfjs-dist";
-import type {
-  PDFDocumentProxy,
-  PDFPageProxy,
-  RenderTask,
-} from "pdfjs-dist";
+import type { PDFDocumentProxy, PDFPageProxy, RenderTask } from "pdfjs-dist";
 // Vite resolves this to a hashed URL for the bundled worker.
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { LoadedSource, ViewerState } from "../types";
@@ -172,8 +168,7 @@ function observePages() {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
         const n = Number((e.target as HTMLElement).dataset.page);
-        if (!best || e.intersectionRatio > best.ratio)
-          best = { n, ratio: e.intersectionRatio };
+        if (!best || e.intersectionRatio > best.ratio) best = { n, ratio: e.intersectionRatio };
       }
       if (best) currentPage.value = best.n;
     },
@@ -218,9 +213,7 @@ async function loadDocument(url: string) {
     const count = doc.numPages;
     // Fetch page proxies concurrently — each is an independent worker round-trip,
     // so a serial loop would make open latency grow with page count.
-    const pages = await Promise.all(
-      Array.from({ length: count }, (_, i) => doc.getPage(i + 1)),
-    );
+    const pages = await Promise.all(Array.from({ length: count }, (_, i) => doc.getPage(i + 1)));
     pages.forEach((page, i) => {
       const n = i + 1;
       pageProxies.set(n, page);
@@ -316,8 +309,7 @@ function scrollElementIntoView(el: HTMLElement, block: "start" | "center") {
   const elRect = el.getBoundingClientRect();
   const cRect = container.getBoundingClientRect();
   const delta = elRect.top - cRect.top;
-  const offset =
-    block === "start" ? PAGE_GAP : (container.clientHeight - elRect.height) / 2;
+  const offset = block === "start" ? PAGE_GAP : (container.clientHeight - elRect.height) / 2;
   container.scrollTo({
     top: container.scrollTop + delta - offset,
     behavior: "smooth",
@@ -436,11 +428,7 @@ onUnmounted(async () => {
 </script>
 
 <template>
-  <div
-    ref="scrollContainer"
-    class="scroll"
-    @wheel="onWheel"
-  >
+  <div ref="scrollContainer" class="scroll" @wheel="onWheel">
     <div
       v-for="n in numPages"
       :key="n"
@@ -449,10 +437,7 @@ onUnmounted(async () => {
       :ref="(el) => setPageEl(el as Element | null, n)"
     >
       <canvas :ref="(el) => setCanvas(el as Element | null, n)"></canvas>
-      <div
-        class="textLayer"
-        :ref="(el) => setTextEl(el as Element | null, n)"
-      ></div>
+      <div class="textLayer" :ref="(el) => setTextEl(el as Element | null, n)"></div>
     </div>
   </div>
 </template>

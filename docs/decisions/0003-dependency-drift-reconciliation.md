@@ -3,10 +3,12 @@
 **Status:** accepted (Phase 2)
 
 ## Context
+
 The Phase 0 audit found small dependency drift across the apps that a single lockfile forces
 us to address or consciously accept.
 
 ## Decisions
+
 - **`geozero` → `0.15.1`.** data-framer pinned `0.14`, map-windower `0.15.1`; both use
   `default-features = false` + `with-wkb, with-geojson`. Unified to `0.15.1` in
   `[workspace.dependencies]`; data-framer bumped.
@@ -21,6 +23,7 @@ us to address or consciously accept.
   `rfd`/`flate2`) stay in their app manifests.
 
 ## Consequences
+
 - One root `Cargo.lock`; common dependencies compile once into the shared `target/`.
 - geozero 0.14→0.15.1 required verifying data-framer's WKB/GeoJSON code still compiles
   (checked at the Phase 2 build gate).

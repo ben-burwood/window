@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Format-agnostic launch / empty screen. Knows nothing about file formats: the title, hint,
 // error text and drag state are all passed in; it only emits `open` when the button is
-// clicked. The app owns the actual OS drag-drop wiring (via @viewers/bridge `onFileDrop`) and
+// clicked. The app owns the actual OS drag-drop wiring (via @window/bridge `onFileDrop`) and
 // passes `dragging` / `error` back down.
 withDefaults(
   defineProps<{
@@ -31,7 +31,9 @@ const emit = defineEmits<{ (e: "open"): void }>();
           stroke-linejoin="round"
           aria-hidden="true"
         >
-          <path d="M14.25 2.25H6.75A1.5 1.5 0 0 0 5.25 3.75v16.5a1.5 1.5 0 0 0 1.5 1.5h10.5a1.5 1.5 0 0 0 1.5-1.5V6.75Z" />
+          <path
+            d="M14.25 2.25H6.75A1.5 1.5 0 0 0 5.25 3.75v16.5a1.5 1.5 0 0 0 1.5 1.5h10.5a1.5 1.5 0 0 0 1.5-1.5V6.75Z"
+          />
           <path d="M14.25 2.25v4.5h4.5" />
         </svg>
       </slot>
@@ -66,7 +68,9 @@ const emit = defineEmits<{ (e: "open"): void }>();
   padding: var(--vw-space-6);
   border: 1.5px dashed var(--vw-border-strong);
   border-radius: var(--vw-radius-lg);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .vw-empty--dragging .vw-empty__card {

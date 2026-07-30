@@ -15,7 +15,9 @@ const props = defineProps<{
 // Derived column lists
 // ---------------------------------------------------------------------------
 const numericColumns = computed(() =>
-  props.columns.filter(c => c.dtype === "integer" || c.dtype === "float" || c.dtype === "decimal")
+  props.columns.filter(
+    (c) => c.dtype === "integer" || c.dtype === "float" || c.dtype === "decimal",
+  ),
 );
 
 // ---------------------------------------------------------------------------
@@ -42,7 +44,7 @@ const fetching = ref(false);
 // AG Charts options
 // ---------------------------------------------------------------------------
 const xAxisType = computed(() => {
-  const dtype = props.columns.find(c => c.name === appliedConfig.value?.xColumn)?.dtype;
+  const dtype = props.columns.find((c) => c.name === appliedConfig.value?.xColumn)?.dtype;
   if (dtype === "datetime" || dtype === "date") return "time";
   if (dtype === "integer" || dtype === "float" || dtype === "decimal") return "number";
   return "category";
@@ -52,10 +54,10 @@ const xAxisType = computed(() => {
 const processedRows = computed(() => {
   if (!appliedConfig.value || rows.value.length === 0) return [];
   const xCol = appliedConfig.value.xColumn;
-  const dtype = props.columns.find(c => c.name === xCol)?.dtype;
+  const dtype = props.columns.find((c) => c.name === xCol)?.dtype;
   if (dtype !== "datetime" && dtype !== "date") return rows.value;
 
-  return rows.value.map(row => ({
+  return rows.value.map((row) => ({
     ...row,
     [xCol]: new Date((row[xCol] as string).replace(" ", "T")),
   }));
@@ -68,7 +70,7 @@ const chartOptions = computed((): AgChartOptions | undefined => {
   // Build typed options — cast via unknown to satisfy AG Charts' discriminated union
   return {
     data: processedRows.value,
-    series: yColumns.map(yCol => ({
+    series: yColumns.map((yCol) => ({
       type: chartType,
       xKey: xColumn,
       yKey: yCol,
@@ -84,9 +86,7 @@ const chartOptions = computed((): AgChartOptions | undefined => {
 // ---------------------------------------------------------------------------
 // Apply / fetch
 // ---------------------------------------------------------------------------
-const canApply = computed(() =>
-  pendingXColumn.value !== "" && pendingYColumns.value.length > 0
-);
+const canApply = computed(() => pendingXColumn.value !== "" && pendingYColumns.value.length > 0);
 
 async function applyConfig() {
   if (!canApply.value) return;
@@ -115,8 +115,10 @@ async function applyConfig() {
 
 watch(
   () => props.activeFilters,
-  () => { if (appliedConfig.value && !fetching.value) applyConfig(); },
-  { deep: true }
+  () => {
+    if (appliedConfig.value && !fetching.value) applyConfig();
+  },
+  { deep: true },
 );
 </script>
 
@@ -133,7 +135,9 @@ watch(
             :key="t.value"
             :class="{ active: pendingChartType === t.value }"
             @click="pendingChartType = t.value"
-          >{{ t.label }}</button>
+          >
+            {{ t.label }}
+          </button>
         </div>
       </div>
 
@@ -153,11 +157,7 @@ watch(
       <div class="config-group y-axis-group">
         <span class="config-label">Y-Axis</span>
         <div class="y-cols">
-          <label
-            v-for="col in numericColumns"
-            :key="col.name"
-            class="y-col-item"
-          >
+          <label v-for="col in numericColumns" :key="col.name" class="y-col-item">
             <input type="checkbox" :value="col.name" v-model="pendingYColumns" />
             <span>{{ col.name }}</span>
           </label>
@@ -165,11 +165,9 @@ watch(
         </div>
       </div>
 
-      <button
-        class="btn-apply"
-        :disabled="!canApply || fetching"
-        @click="applyConfig"
-      >Apply</button>
+      <button class="btn-apply" :disabled="!canApply || fetching" @click="applyConfig">
+        Apply
+      </button>
     </div>
 
     <!-- Chart area -->
@@ -177,11 +175,7 @@ watch(
       <div v-if="!appliedConfig && !fetching" class="chart-empty">
         Select Y-axis columns and click Apply to generate a chart
       </div>
-      <AgCharts
-        v-else-if="appliedConfig"
-        :options="chartOptions"
-        class="chart-instance"
-      />
+      <AgCharts v-else-if="appliedConfig" :options="chartOptions" class="chart-instance" />
     </div>
   </div>
 </template>
@@ -243,7 +237,9 @@ watch(
   border: 1px solid var(--ag-border-color, #babfc7);
   border-radius: 0;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .type-toggle button:first-child {

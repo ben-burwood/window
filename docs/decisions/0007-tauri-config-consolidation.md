@@ -3,12 +3,14 @@
 **Status:** accepted (Phase 6)
 
 ## Context
+
 The three Tauri apps' `tauri.conf.json` files were ~90% identical. Tauri v2 (verified against
 the 2.11 docs) merges a `--config <file>` over the main config using **RFC 7396 JSON Merge
 Patch**: the provided file wins, nested objects merge recursively, **arrays replace wholesale**.
 The docs do **not** specify how relative paths in a split config are anchored.
 
 ## Decisions
+
 - **`tauri.base.json` at the repo root holds only non-path, globally-uniform keys**: the
   `build` commands (`beforeDevCommand`/`beforeBuildCommand`/`devUrl`) and
   `bundle.active`/`targets`/`publisher`/`category`/`copyright` (the last three net-new). It is
@@ -31,6 +33,7 @@ The docs do **not** specify how relative paths in a split config are anchored.
   needs runtime per-file scope granting — deferred with the other runtime features.
 
 ## Consequences
+
 - Effective (merged) config verified by RFC-7396 simulation to equal the original plus the new
   shared metadata; all configs are valid JSON. Per-app configs shrank to per-app content
   (residual length is icon paths + fileAssociations, both irreducible).

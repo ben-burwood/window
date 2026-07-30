@@ -23,21 +23,24 @@ function togglePendingColumn(name: string) {
 }
 
 function selectAllColumns() {
-  pendingColumnVisibility.value = Object.fromEntries(props.columns.map(c => [c.name, true]));
+  pendingColumnVisibility.value = Object.fromEntries(props.columns.map((c) => [c.name, true]));
 }
 
 function deselectAllColumns() {
-  pendingColumnVisibility.value = Object.fromEntries(props.columns.map(c => [c.name, false]));
+  pendingColumnVisibility.value = Object.fromEntries(props.columns.map((c) => [c.name, false]));
 }
 
 function applyColumns() {
-  const anyVisible = props.columns.some(c => pendingColumnVisibility.value[c.name] !== false);
-  if (!anyVisible) { alert("At least one column must be visible."); return; }
+  const anyVisible = props.columns.some((c) => pendingColumnVisibility.value[c.name] !== false);
+  if (!anyVisible) {
+    alert("At least one column must be visible.");
+    return;
+  }
   emit("apply", { ...pendingColumnVisibility.value });
 }
 
 function resetColumns() {
-  const vis = Object.fromEntries(props.columns.map(c => [c.name, true]));
+  const vis = Object.fromEntries(props.columns.map((c) => [c.name, true]));
   pendingColumnVisibility.value = vis;
   emit("reset");
 }
@@ -97,7 +100,10 @@ function resetColumns() {
 .col-dtype-badge {
   font-size: 0.7rem;
   color: var(--ag-disabled-foreground-color, #888);
-  background: var(--ag-chip-background-color, color-mix(in srgb, transparent, var(--ag-foreground-color, #181d1f) 7%));
+  background: var(
+    --ag-chip-background-color,
+    color-mix(in srgb, transparent, var(--ag-foreground-color, #181d1f) 7%)
+  );
   border-radius: var(--ag-border-radius, 4px);
   padding: 1px 5px;
   white-space: nowrap;

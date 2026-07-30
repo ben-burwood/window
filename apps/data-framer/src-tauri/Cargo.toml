@@ -32,5 +32,13 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 geozero = { workspace = true }
 # Format-specific — stays in the app.
-polars = { version = "0.53", features = ["lazy", "parquet", "csv", "dtype-full", "dtype-extension", "strings", "regex"] }
+polars = { version = "0.53", features = [
+  "lazy",
+  "parquet",
+  "csv",
+  "dtype-full",
+  "dtype-extension",
+  "strings",
+  "regex",
+] }
 chrono = "0.4"

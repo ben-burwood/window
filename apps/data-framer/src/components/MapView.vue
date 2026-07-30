@@ -61,7 +61,7 @@ function setLatLonPoints(points: MapPoint[]) {
   const source = mapInstance?.getSource("points") as maplibregl.GeoJSONSource | undefined;
   source?.setData({
     type: "FeatureCollection",
-    features: points.map(p => ({
+    features: points.map((p) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [p.lon, p.lat] },
       properties: { __idx: p.idx },
@@ -136,7 +136,10 @@ async function loadGeometry(fit: boolean): Promise<[number, number][]> {
 // Fit map to data extent — accepts [lon, lat] pairs (GeoJSON order)
 // ---------------------------------------------------------------------------
 function fitMapToBoundsCoords(coords: [number, number][]) {
-  let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
+  let minLon = Infinity,
+    maxLon = -Infinity,
+    minLat = Infinity,
+    maxLat = -Infinity;
   for (const [lon, lat] of coords) {
     if (lon < minLon) minLon = lon;
     if (lon > maxLon) maxLon = lon;
@@ -146,9 +149,14 @@ function fitMapToBoundsCoords(coords: [number, number][]) {
   suppressMoveHandler = true;
   // Use once('moveend') so the flag is cleared exactly when the animation ends,
   // not on an arbitrary timeout that might race with user panning.
-  mapInstance!.once("moveend", () => { suppressMoveHandler = false; });
+  mapInstance!.once("moveend", () => {
+    suppressMoveHandler = false;
+  });
   mapInstance!.fitBounds(
-    [[minLon, minLat], [maxLon, maxLat]],
+    [
+      [minLon, minLat],
+      [maxLon, maxLat],
+    ],
     { padding: 40, duration: 500 },
   );
 }
@@ -163,7 +171,9 @@ async function loadAll(fit = false) {
   mapLoading.value = true;
   try {
     const [pts, verts, geomVerts] = await Promise.all([
-      props.latColumn && props.lonColumn ? fetchLatLonPoints(fit) : Promise.resolve([] as MapPoint[]),
+      props.latColumn && props.lonColumn
+        ? fetchLatLonPoints(fit)
+        : Promise.resolve([] as MapPoint[]),
       props.h3Column ? loadH3Cells(fit) : Promise.resolve([] as [number, number][]),
       props.geomColumn ? loadGeometry(fit) : Promise.resolve([] as [number, number][]),
     ]);
@@ -172,7 +182,7 @@ async function loadAll(fit = false) {
 
     if (fit) {
       const allCoords: [number, number][] = [
-        ...pts.map(p => [p.lon, p.lat] as [number, number]),
+        ...pts.map((p) => [p.lon, p.lat] as [number, number]),
         ...verts,
         ...geomVerts,
       ];
@@ -346,11 +356,20 @@ function initMap() {
     // Cache the clickable layers, then wire per-layer hover cursors. MapLibre
     // hit-tests internally and fires only on enter/leave — far cheaper than
     // querying features on every mousemove.
-    interactiveLayers = ["points", "h3-fill", "geometry-fill", "geometry-outline", "geometry-points"]
-      .filter(id => mapInstance!.getLayer(id));
+    interactiveLayers = [
+      "points",
+      "h3-fill",
+      "geometry-fill",
+      "geometry-outline",
+      "geometry-points",
+    ].filter((id) => mapInstance!.getLayer(id));
     for (const id of interactiveLayers) {
-      mapInstance!.on("mouseenter", id, () => { mapInstance!.getCanvas().style.cursor = "pointer"; });
-      mapInstance!.on("mouseleave", id, () => { mapInstance!.getCanvas().style.cursor = ""; });
+      mapInstance!.on("mouseenter", id, () => {
+        mapInstance!.getCanvas().style.cursor = "pointer";
+      });
+      mapInstance!.on("mouseleave", id, () => {
+        mapInstance!.getCanvas().style.cursor = "";
+      });
     }
 
     mapReady = true;
@@ -375,8 +394,10 @@ function initMap() {
       if (!props.latColumn || !props.lonColumn) return;
       mapLoading.value = true;
       fetchLatLonPoints(false)
-        .then(pts => setLatLonPoints(pts))
-        .finally(() => { mapLoading.value = false; });
+        .then((pts) => setLatLonPoints(pts))
+        .finally(() => {
+          mapLoading.value = false;
+        });
     }, 300);
   });
 }
@@ -384,20 +405,27 @@ function initMap() {
 // ---------------------------------------------------------------------------
 // React to prop changes
 // ---------------------------------------------------------------------------
-watch(() => props.active, async (active) => {
-  if (active) {
-    await nextTick();
-    if (!mapInstance) {
-      initMap();
-    } else if (mapReady) {
-      void loadAll();
+watch(
+  () => props.active,
+  async (active) => {
+    if (active) {
+      await nextTick();
+      if (!mapInstance) {
+        initMap();
+      } else if (mapReady) {
+        void loadAll();
+      }
     }
-  }
-});
+  },
+);
 
-watch(() => props.activeFilters, () => {
-  if (props.active && mapReady) void loadAll(true);
-}, { deep: true });
+watch(
+  () => props.activeFilters,
+  () => {
+    if (props.active && mapReady) void loadAll(true);
+  },
+  { deep: true },
+);
 
 onUnmounted(() => {
   if (moveTimer) clearTimeout(moveTimer);

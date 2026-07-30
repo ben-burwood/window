@@ -1,5 +1,5 @@
 /*
- * @viewers/ui — shared design tokens + base reset.
+ * @window/ui — shared design tokens + base reset.
  *
  * One neutral token vocabulary for all three Tauri apps (decision 0005). Everything is a
  * `--vw-*` custom property so it never collides with third-party themes (AG-Grid's `--ag-*`,
@@ -44,8 +44,10 @@
   --vw-space-6: 32px;
 
   /* Typography */
-  --vw-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --vw-font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  --vw-font:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --vw-font-mono:
+    ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
   --vw-fs-xs: 11px;
   --vw-fs-sm: 12px;
   --vw-fs-md: 13px;
@@ -127,7 +129,10 @@ body {
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
 }
 .vw-btn:hover:not(:disabled) {
   background: var(--vw-surface-2);
