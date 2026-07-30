@@ -18,7 +18,12 @@ fn load_geoparquet(path: String) -> Result<String, String> {
 pub fn run() {
     window_tauri::run(
         window_tauri::app(&["geojson", "pmtiles", "geoparquet"]).invoke_handler(
-            tauri::generate_handler![window_tauri::get_startup_file, load_file, load_geoparquet],
+            tauri::generate_handler![
+                window_tauri::get_startup_file,
+                window_tauri::watch_file,
+                load_file,
+                load_geoparquet
+            ],
         ),
         tauri::generate_context!(),
     );

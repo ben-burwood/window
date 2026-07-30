@@ -30,7 +30,12 @@ use tauri::{Builder, Context, Manager, Wry};
 // macro's own re-export. Re-exported below so apps reference `window_tauri::get_startup_file`.
 mod command {
     use std::sync::Mutex;
-    use tauri::State;
+    use std::time::Duration;
+    use tauri::{AppHandle, Emitter, State};
+
+    /// Emitted (debounced) when the open file changes on disk. The frontend flags the file as
+    /// outdated — it does not reload (Tier 1.3 is the detect half only).
+    pub const FILE_CHANGED_EVENT: &str = "file-changed";
 
     /// Holds the path the app was launched with (OS file association / double-click), so the
     /// frontend can pick it up once on startup.
@@ -43,9 +48,30 @@ mod command {
     pub fn get_startup_file(state: State<'_, StartupFile>) -> Option<String> {
         state.0.lock().unwrap().take()
     }
+
+    /// Holds the active file watcher; replaced whenever a new file is watched, dropped on exit.
+    #[derive(Default)]
+    pub struct WatchState(Mutex<Option<window_core::FileWatch>>);
+
+    /// Watch `path` and emit [`FILE_CHANGED_EVENT`] (debounced) whenever it changes on disk.
+    /// Replaces any previous watch. Call this after loading a file; the frontend then shows an
+    /// "outdated" badge until the user reopens the file.
+    #[tauri::command]
+    pub fn watch_file(
+        path: String,
+        app: AppHandle,
+        state: State<'_, WatchState>,
+    ) -> Result<(), String> {
+        let handle = app.clone();
+        let watch = window_core::watch_file(&path, Duration::from_millis(300), move || {
+            let _ = handle.emit(FILE_CHANGED_EVENT, ());
+        })?;
+        *state.0.lock().unwrap() = Some(watch);
+        Ok(())
+    }
 }
 
-pub use command::{get_startup_file, StartupFile};
+pub use command::{get_startup_file, watch_file, StartupFile, WatchState};
 
 /// Begin building a viewer app: registers the common plugins (`opener`, `dialog`), manages
 /// startup-file state, and installs the first-launch argv handler. `extensions` are the
@@ -65,6 +91,7 @@ pub fn app(extensions: &[&str]) -> Builder<Wry> {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(StartupFile::default())
+        .manage(WatchState::default())
         .setup(move |app| {
             // First launch on Windows/Linux delivers the path via argv (macOS uses the Apple
             // Event handled in `run`). `args_os` avoids a panic on non-UTF-8 argv.

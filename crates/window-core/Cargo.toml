@@ -11,3 +11,5 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
+notify = "8.2.0"
+notify-debouncer-mini = "0.7.0"

@@ -72,3 +72,17 @@ export function onFileDrop(
 export function onOpenFile(onOpen: (path: string) => void): Promise<() => void> {
   return listen<string>("open-file", (event) => onOpen(event.payload));
 }
+
+/**
+ * Start watching the currently-open file for on-disk changes. Replaces any previous watch.
+ * Call after loading a file; changes arrive via {@link onFileChanged}. (Detection only — the
+ * app decides what to do; the viewers show an "outdated" badge and don't auto-reload.)
+ */
+export function watchFile(path: string): Promise<void> {
+  return invoke<void>("watch_file", { path });
+}
+
+/** Subscribe to "the open file changed on disk" notifications. Returns an unlisten function. */
+export function onFileChanged(onChange: () => void): Promise<() => void> {
+  return listen("file-changed", () => onChange());
+}

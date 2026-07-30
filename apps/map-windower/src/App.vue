@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import { EmptyState, Toolbar, ToolbarButton } from "@window/ui";
+import { Badge, EmptyState, Toolbar, ToolbarButton } from "@window/ui";
 import MapView from "./components/MapView.vue";
 import { toFeatureCollection, fileKind, type LoadedSource } from "./types";
 import {
@@ -10,6 +10,8 @@ import {
   loadGeoparquetText,
   onFileDrop,
   onOpenFile,
+  watchFile,
+  onFileChanged,
 } from "./bridge";
 
 const loaded = ref<LoadedSource | null>(null);
@@ -17,6 +19,7 @@ const layerNames = ref<string[]>([]);
 const error = ref<string | null>(null);
 const loading = ref(false);
 const dragging = ref(false);
+const outdated = ref(false);
 const unlisteners: Array<() => void> = [];
 
 // Extensions this app can open (drag-drop validation stays in the app).
@@ -46,6 +49,8 @@ async function loadFileByPath(path: string) {
       const data = toFeatureCollection(JSON.parse(text));
       loaded.value = { kind: "geojson", name, data };
     }
+    await watchFile(path);
+    outdated.value = false;
   } catch (e) {
     loaded.value = null;
     error.value = e instanceof Error ? e.message : String(e);
@@ -88,7 +93,10 @@ async function chooseFile() {
 onMounted(async () => {
   const un1 = await onFileDrop(handleDrop, (h) => (dragging.value = h));
   const un2 = await onOpenFile(openPath);
-  unlisteners.push(un1, un2);
+  const un3 = await onFileChanged(() => {
+    outdated.value = true;
+  });
+  unlisteners.push(un1, un2, un3);
 
   const startup = await getStartupFile();
   if (startup) await openPath(startup);
@@ -101,6 +109,7 @@ onUnmounted(() => unlisteners.forEach((u) => u()));
     <Toolbar v-if="loaded">
       <template #start>
         <span class="file-name">{{ loaded.name }}</span>
+        <Badge v-if="outdated" variant="warning">outdated</Badge>
         <span v-if="layerNames.length" class="layer-names">{{ layerNames.join(", ") }}</span>
       </template>
       <template #end>

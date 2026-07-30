@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, defineAsyncComponent, onMounted, onUnmounted } from "vue";
 import type { ColumnState, GridApi } from "ag-grid-community";
-import { EmptyState, Toolbar, ToolbarButton } from "@window/ui";
+import { Badge, EmptyState, Toolbar, ToolbarButton } from "@window/ui";
 import type { FileInfo, FilterSpec } from "./types";
 import {
   getStartupFile,
@@ -11,6 +11,8 @@ import {
   exportFile as exportFileCmd,
   onFileDrop,
   onOpenFile,
+  watchFile,
+  onFileChanged,
 } from "./bridge";
 import FilterPanel from "./components/FilterPanel.vue";
 import SelectPanel from "./components/SelectPanel.vue";
@@ -35,6 +37,7 @@ const filterPanelOpen = ref(false);
 const columnPanelOpen = ref(false);
 const error = ref<string | null>(null);
 const dragging = ref(false);
+const outdated = ref(false);
 const unlisteners: Array<() => void> = [];
 
 // Extensions this app can open (drag-drop validation stays in the app).
@@ -116,6 +119,8 @@ async function loadFileByPath(path: string) {
     initColumnVisibility();
     currentView.value = "table";
     view.value = "loaded";
+    await watchFile(path);
+    outdated.value = false;
   } catch (err) {
     view.value = "empty";
     error.value = err instanceof Error ? err.message : String(err);
@@ -146,7 +151,10 @@ async function chooseFile() {
 onMounted(async () => {
   const un1 = await onFileDrop(handleDrop, (h) => (dragging.value = h));
   const un2 = await onOpenFile(openPath);
-  unlisteners.push(un1, un2);
+  const un3 = await onFileChanged(() => {
+    outdated.value = true;
+  });
+  unlisteners.push(un1, un2, un3);
 
   const startup = await getStartupFile();
   if (startup) await openPath(startup);
@@ -209,6 +217,7 @@ function onColumnsReset() {
     <Toolbar v-if="view === 'loaded'">
       <template #start>
         <span class="file-name">{{ fileName }}</span>
+        <Badge v-if="outdated" variant="warning">outdated</Badge>
         <span class="row-count">
           <template v-if="activeFilters.length > 0">
             {{ filteredRowCount.toLocaleString() }} /

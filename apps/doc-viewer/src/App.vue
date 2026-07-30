@@ -1,14 +1,23 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
-import { EmptyState, Toolbar, ToolbarButton } from "@window/ui";
+import { Badge, EmptyState, Toolbar, ToolbarButton } from "@window/ui";
 import PdfView from "./components/PdfView.vue";
 import { isPdf, PDF_EXTENSIONS, type LoadedSource, type ViewerState } from "./types";
-import { getStartupFile, openFile, convertFileSrc, onFileDrop, onOpenFile } from "./bridge";
+import {
+  getStartupFile,
+  openFile,
+  convertFileSrc,
+  onFileDrop,
+  onOpenFile,
+  watchFile,
+  onFileChanged,
+} from "./bridge";
 
 const loaded = ref<LoadedSource | null>(null);
 const error = ref<string | null>(null);
 const loading = ref(false);
 const dragging = ref(false);
+const outdated = ref(false);
 const unlisteners: Array<() => void> = [];
 
 const viewer = ref<InstanceType<typeof PdfView> | null>(null);
@@ -54,6 +63,8 @@ async function loadFileByPath(path: string) {
     // The viewer reads the PDF directly via the asset:// protocol, so the bytes
     // never cross the IPC boundary.
     loaded.value = { name, url: convertFileSrc(path) };
+    await watchFile(path);
+    outdated.value = false;
   } catch (e) {
     loaded.value = null;
     error.value = e instanceof Error ? e.message : String(e);
@@ -106,7 +117,10 @@ onMounted(async () => {
   // startup file so nothing is missed; everything funnels through openPath.
   const un1 = await onFileDrop(handleDrop, (hovering) => (dragging.value = hovering));
   const un2 = await onOpenFile(openPath);
-  unlisteners.push(un1, un2);
+  const un3 = await onFileChanged(() => {
+    outdated.value = true;
+  });
+  unlisteners.push(un1, un2, un3);
 
   const startup = await getStartupFile();
   if (startup) await openPath(startup);
@@ -122,6 +136,7 @@ onUnmounted(() => {
     <Toolbar v-if="loaded">
       <template #start>
         <span class="file-name" :title="loaded.name">{{ loaded.name }}</span>
+        <Badge v-if="outdated" variant="warning">outdated</Badge>
       </template>
 
       <template #center>

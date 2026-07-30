@@ -3,7 +3,15 @@
 import { invoke } from "@window/bridge";
 import type { FileInfo, FilterSpec, RowsResponse } from "./types";
 
-export { getStartupFile, openFile, saveFile, onFileDrop, onOpenFile } from "@window/bridge";
+export {
+  getStartupFile,
+  openFile,
+  saveFile,
+  onFileDrop,
+  onOpenFile,
+  watchFile,
+  onFileChanged,
+} from "@window/bridge";
 
 // ---------------------------------------------------------------------------
 // Map-feature shapes returned by the map commands. Each carries `idx` — the

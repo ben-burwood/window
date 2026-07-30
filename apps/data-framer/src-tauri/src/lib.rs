@@ -195,7 +195,8 @@ pub fn run() {
                 get_geometry,
                 get_row,
                 get_chart_data,
-                window_tauri::get_startup_file
+                window_tauri::get_startup_file,
+                window_tauri::watch_file
             ]),
         tauri::generate_context!(),
     );
