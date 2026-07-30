@@ -1,6 +1,5 @@
 # Workspace root for the viewers monorepo.
 # Four independently-built binaries share one lockfile, one target/, and one toolchain.
-# Members are added in Phase 2 as each app is copied in.
 [workspace]
 resolver = "2"
 members = [
@@ -37,8 +36,7 @@ geozero = { version = "0.15.1", default-features = false, features = ["with-wkb"
 [workspace.lints.clippy]
 
 # Release profile lives only in the workspace root (per-crate profiles are ignored in a workspace).
-# `panic = "abort"` is intentionally NOT set globally: it would apply to the three Tauri apps too, and Tauri/wry are not validated against abort here.
-# See docs/decisions/0002-release-profile-panic.md.
+# `panic = "abort"` is intentionally NOT set globally: it would apply to the Tauri apps too, and Tauri/wry are not validated against abort here.
 [profile.release]
 opt-level = 3
 lto = "thin"

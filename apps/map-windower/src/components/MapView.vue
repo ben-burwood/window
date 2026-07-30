@@ -108,7 +108,7 @@ function computeBounds(fc: FeatureCollection): maplibregl.LngLatBounds | null {
   return has ? bounds : null;
 }
 
-// Remove every source/layer we previously added, leaving the OSM base intact.
+// Remove every source/layer we added, leaving the OSM base intact.
 function clearAdded(map: maplibregl.Map) {
   for (const id of addedLayerIds) if (map.getLayer(id)) map.removeLayer(id);
   for (const id of SOURCE_IDS) if (map.getSource(id)) map.removeSource(id);

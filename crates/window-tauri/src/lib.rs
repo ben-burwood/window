@@ -1,7 +1,6 @@
-//! `window-tauri` — the Tauri plumbing shared by the three Tauri viewer apps.
+//! `window-tauri` — the Tauri plumbing shared by the Tauri viewer apps.
 //!
-//! Extracted from the copy-pasted launch-path handling that appeared identically in every app,
-//! and now the home of file-open routing:
+//! File-open routing:
 //! - **Windows/Linux:** each file-open launches its own process (`argv[1]`, handled in
 //!   [`app`]'s setup). This is intentionally *not* single-instance — opening two files gives
 //!   two independent windows.
@@ -25,16 +24,15 @@
 
 use tauri::{Builder, Context, Manager, Wry};
 
-// `#[tauri::command]` emits a `#[macro_export]` helper macro that lands in the crate root's
-// macro namespace; defining the command in a submodule keeps it from colliding with the
-// macro's own re-export. Re-exported below so apps reference `window_tauri::get_startup_file`.
+// `#[tauri::command]` emits a `#[macro_export]` helper macro in the crate root; defining the
+// command in a submodule avoids a name collision. Re-exported below.
 mod command {
     use std::sync::Mutex;
     use std::time::Duration;
     use tauri::{AppHandle, Emitter, State};
 
     /// Emitted (debounced) when the open file changes on disk. The frontend flags the file as
-    /// outdated — it does not reload (Tier 1.3 is the detect half only).
+    /// outdated — it does not reload.
     pub const FILE_CHANGED_EVENT: &str = "file-changed";
 
     /// Holds the path the app was launched with (OS file association / double-click), so the

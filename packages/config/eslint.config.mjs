@@ -1,6 +1,5 @@
 // Shared flat ESLint config for the viewer apps and packages. Opt-in: an app/package adds
-// its own `eslint.config.mjs` that re-exports this. Kept minimal and non-blocking so it can
-// be adopted incrementally.
+// its own `eslint.config.mjs` that re-exports this.
 import js from "@eslint/js";
 
 export default [

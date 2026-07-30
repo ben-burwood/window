@@ -138,8 +138,8 @@ impl eframe::App for ImageShutterApp {
             let row_h = ui.spacing().interact_size.y + 8.0;
             ui.set_min_height(row_h);
             ui.set_max_height(row_h);
-            // Three sections, mirroring doc-viewer: filename (left),
-            // zoom controls (center), Open button (right).
+            // Three sections: filename (left), zoom controls (center),
+            // Open button (right).
             ui.columns(3, |cols| {
                 // Left — current file name.
                 cols[0].with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {

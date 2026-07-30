@@ -22,7 +22,7 @@ const dragging = ref(false);
 const outdated = ref(false);
 const unlisteners: Array<() => void> = [];
 
-// Extensions this app can open (drag-drop validation stays in the app).
+// Extensions this app can open (validated on drag-drop).
 const SUPPORTED_EXTENSIONS = ["geojson", "pmtiles", "geoparquet"];
 function isSupported(path: string): boolean {
   const lower = path.toLowerCase();

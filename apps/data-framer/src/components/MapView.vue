@@ -36,10 +36,6 @@ const EMPTY_FC: maplibregl.GeoJSONSourceSpecification["data"] = {
   features: [],
 };
 
-// Backend map-feature shapes (MapPoint / H3Feature / GeomFeature) are declared in ../bridge;
-// each carries `idx` — the row's absolute position in the source file — so a click can fetch
-// just that row's data (see getRow).
-
 // ---------------------------------------------------------------------------
 // Lat/lon points
 // ---------------------------------------------------------------------------

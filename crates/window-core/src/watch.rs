@@ -1,9 +1,8 @@
-//! Framework-free file watching (Tier 1.3, first half).
+//! Framework-free file watching.
 //!
 //! Watches a single file and invokes a callback when it changes on disk. The caller decides
 //! what to do — the viewers flag the open file as *outdated* rather than auto-reloading. Uses
-//! `notify` with a debouncer so the burst of filesystem events an editor emits while saving
-//! collapses into one notification.
+//! `notify` with a debouncer so an editor's burst of save events collapses into one notification.
 
 use std::path::Path;
 use std::time::Duration;

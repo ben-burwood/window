@@ -22,10 +22,6 @@ tiny-skia = "0.12"
 rfd = "0.15"
 flate2 = "1"
 
-# NOTE: the release profile now lives in the workspace root Cargo.toml (per-crate profiles are
-# ignored in a workspace). `panic = "abort"` was dropped there — see
-# docs/decisions/0002-release-profile-panic.md.
-
 # ---------------------------------------------------------------------------
 # cargo-packager configuration (https://github.com/crabnebula-dev/cargo-packager)
 # Produces .dmg/.app (macOS), NSIS .exe (Windows), .deb/.AppImage (Linux),

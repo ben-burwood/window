@@ -1,6 +1,5 @@
 <script setup lang="ts">
-// A small tokenized status pill (e.g. an "outdated" marker next to a filename). Purely
-// presentational and format-agnostic — the label comes from the slot.
+// Tokenized status pill; label comes from the slot.
 withDefaults(
   defineProps<{
     variant?: "default" | "warning" | "danger";

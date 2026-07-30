@@ -21,7 +21,6 @@ pub struct LoadedFile {
 }
 
 /// Tauri managed state — wrapped in Mutex so commands can mutate it.
-/// (The launch/startup-file path is handled separately by window-tauri.)
 pub struct AppState {
     pub file: Mutex<Option<LoadedFile>>,
 }

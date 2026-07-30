@@ -9,8 +9,7 @@ export function isPdf(path: string): boolean {
   return PDF_EXTENSIONS.some((ext) => lower.endsWith(`.${ext}`));
 }
 
-// Viewer display state surfaced from PdfView to the top bar. Shared so both
-// sides reference one definition instead of hand-maintaining matching shapes.
+// Viewer display state surfaced from PdfView to the top bar.
 export interface ViewerState {
   currentPage: number;
   totalPages: number;

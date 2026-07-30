@@ -1,5 +1,4 @@
-// map-windower's typed IPC wrappers. The only place this app's invoke() string literals live;
-// built on the shared @window/bridge. Components import from here, never call invoke directly.
+// map-windower's typed IPC wrappers. Components import from here, never call invoke directly.
 import { invoke } from "@window/bridge";
 
 export {

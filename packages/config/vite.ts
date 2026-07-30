@@ -3,8 +3,7 @@ import vue from "@vitejs/plugin-vue";
 
 /**
  * Options each app passes to {@link viewerConfig}. Everything is optional; the factory
- * supplies the Tauri-tailored defaults that were previously copy-pasted into every app's
- * `vite.config.ts`.
+ * supplies the Tauri-tailored defaults.
  */
 export interface ViewerConfigOptions {
   /**
@@ -21,9 +20,9 @@ export interface ViewerConfigOptions {
 /**
  * Build a Vite config tailored for a Tauri v2 + Vue 3 viewer app.
  *
- * It is a *factory*, not a static config: each app needs its own vendor chunks, so callers
- * pass `manualChunks`. All the Tauri plumbing (fixed dev port, HMR over the dev host,
- * ignoring `src-tauri`, not clearing the screen so Rust errors survive) lives here once.
+ * A factory, not a static config: each app passes its own vendor `manualChunks`. Common
+ * Tauri plumbing (fixed dev port, HMR over the dev host, ignoring `src-tauri`, not clearing
+ * the screen so Rust errors survive) is applied here.
  */
 export function viewerConfig(opts: ViewerConfigOptions = {}) {
   // @tauri-apps/cli sets this when running `tauri dev` on a mobile/remote host.

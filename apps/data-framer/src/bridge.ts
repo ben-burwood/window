@@ -1,5 +1,4 @@
-// data-framer's typed IPC wrappers. The only place this app's invoke() string literals live;
-// built on the shared @window/bridge. Components import from here, never call invoke directly.
+// data-framer's typed IPC wrappers. Components import from here, never call invoke directly.
 import { invoke } from "@window/bridge";
 import type { FileInfo, FilterSpec, RowsResponse } from "./types";
 
@@ -13,11 +12,8 @@ export {
   onFileChanged,
 } from "@window/bridge";
 
-// ---------------------------------------------------------------------------
-// Map-feature shapes returned by the map commands. Each carries `idx` — the
-// row's absolute position in the source file — so a click can fetch just that
-// row's data (see getRow).
-// ---------------------------------------------------------------------------
+// Map-feature shapes from the map commands. Each carries `idx` — the row's
+// absolute position in the source file — so a click can fetch just that row (see getRow).
 export interface MapPoint {
   lat: number;
   lon: number;
