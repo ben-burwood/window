@@ -3,7 +3,8 @@ import { ref, watch, onUnmounted, nextTick } from "vue";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { cellToBoundary } from "h3-js";
-import { invoke } from "@tauri-apps/api/core";
+import { getMapPoints, getH3Values, getGeometry, getRow } from "../bridge";
+import type { MapPoint } from "../bridge";
 import { formatCellValue } from "../types";
 import type { FilterSpec } from "../types";
 
@@ -35,11 +36,9 @@ const EMPTY_FC: maplibregl.GeoJSONSourceSpecification["data"] = {
   features: [],
 };
 
-// Backend map-feature shapes. Each carries `idx` — the row's absolute position
-// in the source file — so a click can fetch just that row's data (see get_row).
-interface MapPoint { lat: number; lon: number; idx: number; }
-interface H3Feature { cell: string; idx: number; }
-interface GeomFeature { geometry: GeoJSON.Geometry; idx: number; }
+// Backend map-feature shapes (MapPoint / H3Feature / GeomFeature) are declared in ../bridge;
+// each carries `idx` — the row's absolute position in the source file — so a click can fetch
+// just that row's data (see getRow).
 
 // ---------------------------------------------------------------------------
 // Lat/lon points
@@ -47,7 +46,7 @@ interface GeomFeature { geometry: GeoJSON.Geometry; idx: number; }
 // Returns points from the backend (bbox-filtered when fit=false).
 async function fetchLatLonPoints(fit: boolean): Promise<MapPoint[]> {
   const bounds = fit ? null : mapInstance?.getBounds();
-  return invoke<MapPoint[]>("get_map_points", {
+  return getMapPoints({
     latCol: props.latColumn,
     lonCol: props.lonColumn,
     filters: props.activeFilters,
@@ -77,7 +76,7 @@ function setLatLonPoints(points: MapPoint[]) {
 // `fit` gates vertex collection: the returned coords are only used for
 // fit-to-bounds, so the walk is skipped on non-fitting reloads.
 async function loadH3Cells(fit: boolean): Promise<[number, number][]> {
-  const cells = await invoke<H3Feature[]>("get_h3_values", {
+  const cells = await getH3Values({
     h3Col: props.h3Column,
     filters: props.activeFilters,
   });
@@ -117,7 +116,7 @@ function collectCoords(node: unknown, out: [number, number][]) {
 // Fetches decoded GeoJSON geometries, renders them, and returns their vertices
 // as [lon, lat] pairs (GeoJSON order) for fitMapToBounds.
 async function loadGeometry(fit: boolean): Promise<[number, number][]> {
-  const feats = await invoke<GeomFeature[]>("get_geometry", {
+  const feats = await getGeometry({
     geomCol: props.geomColumn,
     filters: props.activeFilters,
   });
@@ -222,7 +221,7 @@ async function showFeaturePopup(lngLat: maplibregl.LngLatLike, idx: number) {
     .addTo(mapInstance!);
   const opened = popup;
   try {
-    const row = await invoke<Record<string, unknown> | null>("get_row", { index: idx });
+    const row = await getRow(idx);
     const data = { ...(row ?? {}) };
     // The geometry column is raw WKB bytes — not useful in the popup.
     if (props.geomColumn) delete data[props.geomColumn];
@@ -435,12 +434,12 @@ onUnmounted(() => {
   max-height: 320px;
   overflow: auto;
   padding: 10px 12px;
-  font-family: var(--ag-font-family, "IBM Plex Sans", sans-serif);
+  font-family: var(--vw-font);
 }
 
 .map-popup table {
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: var(--vw-fs-sm);
 }
 
 .map-popup th,
@@ -451,19 +450,19 @@ onUnmounted(() => {
 }
 
 .map-popup th {
-  color: #646c7a;
+  color: var(--vw-fg-muted);
   font-weight: 600;
   white-space: nowrap;
   padding-right: 10px;
 }
 
 .map-popup td {
-  color: #181d1f;
+  color: var(--vw-fg);
   word-break: break-word;
 }
 
 .map-popup-status {
-  font-size: 12px;
-  color: #646c7a;
+  font-size: var(--vw-fs-sm);
+  color: var(--vw-fg-muted);
 }
 </style>

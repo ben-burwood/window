@@ -1,40 +1,9 @@
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #0f172a;
-  background-color: #f8fafc;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#app {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-}
-
+/* doc-viewer app-specific globals. Base reset, typography and buttons come from
+   @viewers/ui/theme.css (imported first in main.ts). */
 #app {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-button:focus,
-button:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.4);
 }
 
 /* PDF.js text layer — invisible, selectable text aligned over the canvas.
@@ -67,7 +36,7 @@ button:focus-visible {
 }
 
 .textLayer ::selection {
-  background: rgba(33, 150, 243, 0.4);
+  background: color-mix(in srgb, var(--vw-accent) 40%, transparent);
 }
 
 /* Find matches, drawn behind the transparent text via the Highlight API. */

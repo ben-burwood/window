@@ -1,5 +1,4 @@
 # Task runner for the viewers monorepo. Recipes are fleshed out per phase.
-# Run `just` to list available recipes.
 
 default:
     @just --list
@@ -36,6 +35,14 @@ check-core-clean:
 # Install all JS workspace dependencies.
 install:
     npm install
+
+# Type-check + build every app frontend (produces each app's dist/).
+build-web:
+    npm run build --workspaces --if-present
+
+# Type-check + build a single app frontend, e.g. `just build-app data-framer`.
+build-app app:
+    npm run build --workspace {{app}}
 
 # --- Meta ---------------------------------------------------------------------
 

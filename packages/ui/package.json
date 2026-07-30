@@ -1,0 +1,14 @@
+{
+  "name": "@viewers/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Format-agnostic Vue components and the shared design-token theme for the viewer apps.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./theme.css": "./src/theme.css"
+  },
+  "peerDependencies": {
+    "vue": "^3.5"
+  }
+}

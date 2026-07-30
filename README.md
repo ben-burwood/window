@@ -1,8 +1,8 @@
-# viewers
+# window
 
-A monorepo for four small desktop file-viewer applications that share a framework-free Rust
-core and (for the three Tauri apps) shared frontend packages. **One repo, one lockfile, one
-toolchain, four independently-built binaries.**
+A monorepo for four small desktop file-viewer applications that share a framework-free Rust core and (for the Tauri apps) shared frontend packages. 
+
+**One repo, one lockfile, one toolchain, four independently-built binaries.**
 
 | App             | Format        | Stack                                   |
 | --------------- | ------------- | --------------------------------------- |
@@ -17,7 +17,6 @@ toolchain, four independently-built binaries.**
 crates/    viewer-core (pure Rust), viewer-tauri, viewer-egui
 packages/  viewer-ui, viewer-bridge, config  (consumed by the three Tauri apps)
 apps/      data-framer, map-windower, doc-viewer, image-shutter
-docs/      adding-a-viewer.md, decisions/
 ```
 
 ## Toolchain
@@ -33,6 +32,3 @@ just install   # npm install (JS workspaces)
 just build     # cargo build --workspace
 just check     # cargo metadata resolves
 ```
-
-See `docs/adding-a-viewer.md` for how to add a new viewer, and `docs/decisions/` for
-architecture decision records.

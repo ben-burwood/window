@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { invoke } from "@tauri-apps/api/core";
+import { getChartData } from "../bridge";
 import { AgCharts } from "ag-charts-vue3";
 import type { AgChartOptions } from "ag-charts-community";
 import type { ChartConfig, ColumnInfo, FilterSpec } from "../types";
@@ -99,7 +99,7 @@ async function applyConfig() {
 
   fetching.value = true;
   try {
-    const data = await invoke<Record<string, unknown>[]>("get_chart_data", {
+    const data = await getChartData({
       xCol: config.xColumn,
       yCols: config.yColumns,
       filters: props.activeFilters,

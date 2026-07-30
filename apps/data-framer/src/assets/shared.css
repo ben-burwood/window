@@ -1,3 +1,12 @@
+/* data-framer app-specific globals. Base reset, typography and the shared --vw-* tokens come
+   from @viewers/ui/theme.css (imported first in main.ts). Everything here is chrome that the
+   shared UI package doesn't own (the fetch progress bar, the filter/column panels). */
+#app {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* Loading progress bar — used by DataGrid (.grid-wrapper) and MapView (.map-wrapper) */
 .fetching::before {
   content: "";
@@ -9,9 +18,9 @@
   background: linear-gradient(
     90deg,
     transparent,
-    var(--ag-active-color, #2196f3),
-    color-mix(in srgb, var(--ag-active-color, #2196f3) 70%, #000),
-    var(--ag-active-color, #2196f3),
+    var(--vw-accent),
+    color-mix(in srgb, var(--vw-accent) 70%, #000),
+    var(--vw-accent),
     transparent
   );
   background-size: 300% 100%;
@@ -27,11 +36,11 @@
 /* Panel base layout — used by FilterPanel and SelectPanel */
 .panel {
   padding: 8px 14px 4px;
-  background: var(--ag-header-background-color, #f8f8f8);
-  border-bottom: 1px solid var(--ag-border-color, #babfc7);
-  font-family: var(--ag-font-family, inherit);
-  font-size: var(--ag-font-size, 14px);
-  color: var(--ag-foreground-color, #181d1f);
+  background: var(--vw-surface);
+  border-bottom: 1px solid var(--vw-border);
+  font-family: var(--vw-font);
+  font-size: var(--vw-fs-md);
+  color: var(--vw-fg);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -53,30 +62,30 @@
 /* Shared panel button variants — used by FilterPanel and SelectPanel */
 .btn-apply {
   padding: 4px 16px;
-  font-size: 0.8rem;
-  font-family: var(--ag-font-family, inherit);
-  background: var(--ag-active-color, #2196f3);
-  color: #fff;
+  font-size: var(--vw-fs-sm);
+  font-family: var(--vw-font);
+  background: var(--vw-accent);
+  color: var(--vw-accent-fg);
   border: none;
-  border-radius: var(--ag-border-radius, 4px);
+  border-radius: var(--vw-radius-sm);
   cursor: pointer;
 }
 
 .btn-apply:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--ag-active-color, #2196f3) 82%, #000);
+  background: var(--vw-accent-hover);
 }
 
 .btn-secondary {
   padding: 4px 12px;
-  font-size: 0.8rem;
-  font-family: var(--ag-font-family, inherit);
+  font-size: var(--vw-fs-sm);
+  font-family: var(--vw-font);
   background: transparent;
-  color: var(--ag-foreground-color, #181d1f);
-  border: 1px solid var(--ag-border-color, #babfc7);
-  border-radius: var(--ag-border-radius, 4px);
+  color: var(--vw-fg);
+  border: 1px solid var(--vw-border-strong);
+  border-radius: var(--vw-radius-sm);
   cursor: pointer;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--ag-row-hover-color, rgba(33, 150, 243, 0.12));
+  background: var(--vw-surface-2);
 }

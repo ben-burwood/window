@@ -1,0 +1,16 @@
+{
+  "name": "@viewers/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared build/TS config for the viewer apps: a Vite factory and a tsconfig base.",
+  "exports": {
+    "./vite": "./vite.ts",
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./eslint": "./eslint.config.mjs"
+  },
+  "peerDependencies": {
+    "vite": "^6",
+    "@vitejs/plugin-vue": "^5"
+  }
+}

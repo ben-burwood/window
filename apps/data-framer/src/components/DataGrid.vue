@@ -20,9 +20,9 @@ import type {
   IGetRowsParams,
   ValueFormatterParams,
 } from "ag-grid-community";
-import { invoke } from "@tauri-apps/api/core";
+import { getRows } from "../bridge";
 import { formatCellValue } from "../types";
-import type { ColumnInfo, FilterSpec, RowsResponse } from "../types";
+import type { ColumnInfo, FilterSpec } from "../types";
 
 ModuleRegistry.registerModules([
   InfiniteRowModelModule,
@@ -33,7 +33,7 @@ ModuleRegistry.registerModules([
 ]);
 
 const gridTheme = themeQuartz.withParams({
-  headerBackgroundColor: "color-mix(in srgb, white, #2196f3 12%)",
+  headerBackgroundColor: "color-mix(in srgb, var(--vw-bg), var(--vw-accent) 12%)",
 });
 
 const props = defineProps<{
@@ -100,7 +100,7 @@ function buildDatasource(): IDatasource {
       const { startRow, endRow, sortModel } = params;
       pendingFetches.value++;
       try {
-        const r = await invoke<RowsResponse>("get_rows", {
+        const r = await getRows({
           offset: startRow,
           limit: endRow - startRow,
           sortCol: sortModel[0]?.colId ?? null,

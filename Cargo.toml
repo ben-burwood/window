@@ -19,31 +19,26 @@ rust-version = "1.82"
 license = "MIT"
 authors = ["Ben Burwood"]
 
-# Shared dependency versions. Apps opt in with e.g. `serde = { workspace = true }`, and may
-# add extra features on top (e.g. tauri's `protocol-asset`).
-# Format-specific deps (polars, arrow/parquet, resvg, ...) stay in their app's Cargo.toml.
+# Shared dependency versions. Apps opt in with e.g. `serde = { workspace = true }`, and may add extra features on top (e.g. tauri's `protocol-asset`).
+# App-specific deps (polars, arrow/parquet, resvg, ...) stay in their app's Cargo.toml.
 [workspace.dependencies]
-# Internal crates.
+# Internal
 viewer-core = { path = "crates/viewer-core" }
 viewer-tauri = { path = "crates/viewer-tauri" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-# Tauri stack — shared by the three Tauri apps.
+# Tauri
 tauri = { version = "2", features = [] }
 tauri-build = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
-# geozero drift reconciled to the newer version (data-framer was 0.14, map-windower 0.15.1).
 geozero = { version = "0.15.1", default-features = false, features = ["with-wkb", "with-geojson"] }
 
-# Lints are defined here; each crate opts in with `[lints] workspace = true`.
-# CI runs `cargo clippy --workspace -- -D warnings`.
 [workspace.lints.clippy]
 
-# Release profile lives only in the workspace root (per-crate profiles are ignored in a
-# workspace). Adopted from image-shutter's tuned profile. `panic = "abort"` is intentionally
-# NOT set globally: it would apply to the three Tauri apps too, and Tauri/wry are not
-# validated against abort here. See docs/decisions/0002-release-profile-panic.md.
+# Release profile lives only in the workspace root (per-crate profiles are ignored in a workspace).
+# `panic = "abort"` is intentionally NOT set globally: it would apply to the three Tauri apps too, and Tauri/wry are not validated against abort here.
+# See docs/decisions/0002-release-profile-panic.md.
 [profile.release]
 opt-level = 3
 lto = "thin"

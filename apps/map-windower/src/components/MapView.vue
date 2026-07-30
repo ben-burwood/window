@@ -6,7 +6,7 @@ import maplibregl, {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { PMTiles, Protocol, TileType } from "pmtiles";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { convertFileSrc } from "@viewers/bridge";
 import type { FeatureCollection } from "geojson";
 import type { LoadedSource } from "../types";
 

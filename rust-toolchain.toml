@@ -1,5 +1,3 @@
-# One pinned toolchain for the whole workspace (net-new; none of the source repos pinned).
-# Must satisfy eframe 0.35, the arrow/parquet 59.x + polars 0.53 stacks, and Tauri v2.
 [toolchain]
 channel = "1.94.0"
 components = ["rustfmt", "clippy"]

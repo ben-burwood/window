@@ -263,9 +263,9 @@ function clearFilters() {
 }
 
 .remove-btn:hover:not(:disabled) {
-  background: #fee2e2;
-  color: #b91c1c;
-  border-color: #fca5a5;
+  background: var(--vw-danger-weak);
+  color: var(--vw-danger);
+  border-color: var(--vw-danger);
 }
 
 .add-filter-btn {
