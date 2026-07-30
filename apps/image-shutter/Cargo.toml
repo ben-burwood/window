@@ -1,0 +1,61 @@
+[package]
+name = "image-shutter"
+version.workspace = true
+edition.workspace = true
+description = "A tiny, fast, native SVG viewer"
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository = "https://github.com/ben-burwood/image-shutter"
+readme = "README.md"
+
+[lints]
+workspace = true
+
+[dependencies]
+eframe = "0.35"
+egui = "0.35"
+usvg = "0.47"
+resvg = "0.47"
+tiny-skia = "0.12"
+rfd = "0.15"
+flate2 = "1"
+
+# NOTE: the release profile now lives in the workspace root Cargo.toml (per-crate profiles are
+# ignored in a workspace). `panic = "abort"` was dropped there — see
+# docs/decisions/0002-release-profile-panic.md.
+
+# ---------------------------------------------------------------------------
+# cargo-packager configuration (https://github.com/crabnebula-dev/cargo-packager)
+# Produces .dmg/.app (macOS), NSIS .exe (Windows), .deb/.AppImage (Linux),
+# registers the SVG file association on every platform, and generates the
+# platform icons from icons/icon.png.
+# ---------------------------------------------------------------------------
+[package.metadata.packager]
+product-name = "Image Shutter"
+identifier = "com.image-shutter.app"
+before-packaging-command = "cargo build --release"
+icons = ["icons/icon.png"]
+out-dir = "dist"
+category = "Utility"
+authors = ["Ben Burwood"]
+publisher = "Ben Burwood"
+license-file = "LICENSE"
+homepage = "https://github.com/ben-burwood/image-shutter"
+
+[[package.metadata.packager.file-associations]]
+extensions = ["svg", "svgz"]
+mime-type = "image/svg+xml"
+description = "Scalable Vector Graphics"
+name = "SVG Image"
+role = "viewer"
+
+# --- Code signing (unsigned for now — fill in when certs are available) ------
+# [package.metadata.packager.macos]
+# signing-identity = "Developer ID Application: Your Name (TEAMID)"
+# [package.metadata.packager.macos.notarization]   # via env: APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID
+#
+# [package.metadata.packager.windows]
+# certificate-thumbprint = "..."
+# digest-algorithm = "sha256"
+# timestamp-url = "http://timestamp.digicert.com"

@@ -1,0 +1,36 @@
+[package]
+name = "map-windower"
+version.workspace = true
+description = "GeoJSON and PMTiles viewer"
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "map_windower_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+tauri = { workspace = true, features = ["protocol-asset"] }
+tauri-plugin-opener = { workspace = true }
+tauri-plugin-dialog = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+geozero = { workspace = true }
+# Format-specific — stays in the app.
+# Snappy + Zstd cover essentially all GeoParquet files; lz4 is skipped because
+# parquet's lz4 feature pulls an lz4_flex version the index can't resolve here.
+parquet = { version = "59.1.0", default-features = false, features = ["arrow", "snap", "zstd", "brotli", "flate2-zlib-rs"] }
+arrow-array = "59.1.0"
+arrow-schema = "59.1.0"
+arrow-json = "59.1.0"
