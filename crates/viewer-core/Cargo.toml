@@ -1,0 +1,14 @@
+[package]
+name = "viewer-core"
+description = "Framework-free core shared by all viewers: file sniffing, path handling, errors."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+# Framework-free by design. No tauri/eframe/egui/wry here — enforced by `just check-core-clean`.
+[dependencies]

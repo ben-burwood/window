@@ -1,0 +1,5 @@
+# Workspace-wide cargo configuration.
+# The default target directory (workspace-root/target) is intentionally shared across all
+# four apps so common dependencies compile once, not four times.
+[net]
+git-fetch-with-cli = true
