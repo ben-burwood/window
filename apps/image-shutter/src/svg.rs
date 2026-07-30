@@ -73,8 +73,7 @@ pub fn render(img: &SvgImage, scale: f32) -> ColorImage {
 /// Transparently decompress gzip-compressed SVG (`.svgz`); returns the input
 /// unchanged if it is not gzipped.
 fn maybe_gunzip(data: Vec<u8>) -> Vec<u8> {
-    const GZIP_MAGIC: [u8; 2] = [0x1f, 0x8b];
-    if data.len() >= 2 && data[0..2] == GZIP_MAGIC {
+    if viewer_core::is_gzip(&data) {
         let mut decoder = flate2::read::GzDecoder::new(&data[..]);
         let mut out = Vec::new();
         if decoder.read_to_end(&mut out).is_ok() {

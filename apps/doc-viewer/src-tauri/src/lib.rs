@@ -9,7 +9,7 @@ struct AppState {
 }
 
 fn is_supported(path: &str) -> bool {
-    path.to_lowercase().ends_with(".pdf")
+    viewer_core::has_extension(path, &["pdf"])
 }
 
 // Returns and clears the startup file path. The frontend calls this once on

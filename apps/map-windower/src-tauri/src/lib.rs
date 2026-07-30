@@ -11,8 +11,7 @@ struct AppState {
 }
 
 fn is_supported(path: &str) -> bool {
-    let lower = path.to_lowercase();
-    lower.ends_with(".geojson") || lower.ends_with(".pmtiles") || lower.ends_with(".geoparquet")
+    viewer_core::has_extension(path, &["geojson", "pmtiles", "geoparquet"])
 }
 
 // Returns and clears the startup file path. The frontend calls this once on

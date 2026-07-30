@@ -188,8 +188,7 @@ pub fn run() {
         .setup(|app| {
             let args: Vec<String> = std::env::args().collect();
             if let Some(path) = args.get(1) {
-                let lower = path.to_lowercase();
-                if lower.ends_with(".csv") || lower.ends_with(".parquet") {
+                if viewer_core::has_extension(path, &["csv", "parquet"]) {
                     *app.state::<AppState>().startup_file.lock().unwrap() = Some(path.clone());
                 }
             }
