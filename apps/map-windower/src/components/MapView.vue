@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
-import maplibregl, { type StyleSpecification, type MapGeoJSONFeature } from "maplibre-gl";
+import maplibregl, { type MapGeoJSONFeature } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { PMTiles, Protocol, TileType } from "pmtiles";
+import { ContextMenu, type ContextMenuItem } from "@window/ui";
 import { convertFileSrc } from "@window/bridge";
 import type { FeatureCollection } from "geojson";
 import type { LoadedSource } from "../types";
@@ -45,19 +46,52 @@ const PALETTE = [
   "#65a30d",
 ];
 
-// Plain OpenStreetMap raster tiles — no API key required.
-const OSM_STYLE: StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: "raster",
-      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-      tileSize: 256,
-      attribution: "© OpenStreetMap contributors",
+// Key-free OpenFreeMap vector basemaps. These are full style documents (not a
+// single base layer), so we switch with setStyle rather than toggling layer
+// visibility.
+const BASEMAPS = {
+  positron: "https://tiles.openfreemap.org/styles/positron",
+  bright: "https://tiles.openfreemap.org/styles/bright",
+} as const;
+type Basemap = keyof typeof BASEMAPS;
+const basemap = ref<Basemap>("bright");
+
+// Swap the base style while keeping the data overlay. transformStyle merges our
+// sources/layers (identified by id) from the outgoing style into the incoming
+// one; layers are appended last so they stay on top of the new base map.
+function setBasemap(name: Basemap) {
+  const map = mapInstance;
+  if (!map || name === basemap.value) return;
+  basemap.value = name;
+  map.setStyle(BASEMAPS[name], {
+    transformStyle: (prev, next) => {
+      if (!prev) return next;
+      const sources = { ...next.sources };
+      for (const id of SOURCE_IDS) if (prev.sources[id]) sources[id] = prev.sources[id];
+      const keep = new Set(addedLayerIds);
+      return { ...next, sources, layers: [...next.layers, ...prev.layers.filter((l) => keep.has(l.id))] };
     },
-  },
-  layers: [{ id: "osm", type: "raster", source: "osm" }],
-};
+  });
+}
+
+// ---- right-click basemap menu --------------------------------------------
+const menuOpen = ref(false);
+const menuX = ref(0);
+const menuY = ref(0);
+
+const menuItems = ref<ContextMenuItem[]>([]);
+function openMenu(e: MouseEvent) {
+  menuX.value = e.clientX;
+  menuY.value = e.clientY;
+  menuItems.value = [
+    { id: "positron", label: "Positron (light)", checked: basemap.value === "positron" },
+    { id: "bright", label: "Bright", checked: basemap.value === "bright" },
+  ];
+  menuOpen.value = true;
+}
+function onMenuSelect(id: string) {
+  setBasemap(id as Basemap);
+}
 
 function escapeHtml(value: unknown): string {
   return String(value)
@@ -280,7 +314,7 @@ onMounted(() => {
 
   const map = new maplibregl.Map({
     container: mapContainer.value,
-    style: OSM_STYLE,
+    style: BASEMAPS[basemap.value],
     center: [-2.5, 54.5], // UK-centered default before data loads
     zoom: 5,
   });
@@ -316,7 +350,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="mapContainer" class="map-container"></div>
+  <div ref="mapContainer" class="map-container" @contextmenu.prevent="openMenu"></div>
+  <ContextMenu
+    :open="menuOpen"
+    :x="menuX"
+    :y="menuY"
+    :items="menuItems"
+    @select="onMenuSelect"
+    @close="menuOpen = false"
+  />
 </template>
 
 <style scoped>
