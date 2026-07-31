@@ -18,7 +18,7 @@ jobs:
           - platform: macos-latest
             formats: dmg
           - platform: ubuntu-latest
-            formats: deb appimage
+            formats: deb,appimage
           - platform: windows-latest
             formats: nsis
     runs-on: ${{ matrix.platform }}
