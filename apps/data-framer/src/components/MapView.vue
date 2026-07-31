@@ -2,7 +2,8 @@
 import { ref, watch, onUnmounted, nextTick } from "vue";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { ContextMenu, type ContextMenuItem } from "@window/ui";
+import { ContextMenu } from "@window/ui";
+import { useBasemapMenu } from "@window/map";
 import { cellToBoundary } from "h3-js";
 import { getMapPoints, getH3Values, getGeometry, getRow } from "../bridge";
 import type { MapPoint } from "../bridge";
@@ -242,61 +243,23 @@ async function showFeaturePopup(lngLat: maplibregl.LngLatLike, idx: number) {
 // ---------------------------------------------------------------------------
 // Map init
 // ---------------------------------------------------------------------------
-// Key-free OpenFreeMap vector basemaps — full style documents, switched with
-// setStyle (not layer-visibility toggling).
-const BASEMAPS = {
-  positron: "https://tiles.openfreemap.org/styles/positron",
-  bright: "https://tiles.openfreemap.org/styles/bright",
-} as const;
-type Basemap = keyof typeof BASEMAPS;
-const basemap = ref<Basemap>("bright");
-
-// Our data sources/layers, kept across a basemap change by transformStyle.
+// Right-click basemap switcher. The data sources/layers listed here are carried
+// across a basemap change by the composable's transformStyle.
 const OVERLAY_SOURCE_IDS = ["points", "h3-cells", "geometry"];
-const OVERLAY_LAYER_IDS = new Set([
+const OVERLAY_LAYER_IDS = [
   "points",
   "h3-fill",
   "h3-outline",
   "geometry-fill",
   "geometry-outline",
   "geometry-points",
-]);
-
-// Swap the base style while keeping the data overlay. transformStyle merges our
-// sources/layers from the outgoing style into the incoming one; layers are
-// appended last so they stay on top of the new base map.
-function setBasemap(name: Basemap) {
-  if (!mapInstance || name === basemap.value) return;
-  basemap.value = name;
-  mapInstance.setStyle(BASEMAPS[name], {
-    transformStyle: (prev, next) => {
-      if (!prev) return next;
-      const sources = { ...next.sources };
-      for (const id of OVERLAY_SOURCE_IDS) if (prev.sources[id]) sources[id] = prev.sources[id];
-      const layers = [...next.layers, ...prev.layers.filter((l) => OVERLAY_LAYER_IDS.has(l.id))];
-      return { ...next, sources, layers };
-    },
+];
+const { styleUrl, menuOpen, menuX, menuY, menuItems, openMenu, closeMenu, onSelect } =
+  useBasemapMenu({
+    getMap: () => mapInstance,
+    overlaySourceIds: () => OVERLAY_SOURCE_IDS,
+    overlayLayerIds: () => OVERLAY_LAYER_IDS,
   });
-}
-
-// ---- right-click basemap menu --------------------------------------------
-const menuOpen = ref(false);
-const menuX = ref(0);
-const menuY = ref(0);
-const menuItems = ref<ContextMenuItem[]>([]);
-
-function openMenu(e: MouseEvent) {
-  menuX.value = e.clientX;
-  menuY.value = e.clientY;
-  menuItems.value = [
-    { id: "positron", label: "Positron (light)", checked: basemap.value === "positron" },
-    { id: "bright", label: "Bright", checked: basemap.value === "bright" },
-  ];
-  menuOpen.value = true;
-}
-function onMenuSelect(id: string) {
-  setBasemap(id as Basemap);
-}
 
 const POINTS_LAYER: maplibregl.CircleLayerSpecification = {
   id: "points",
@@ -370,7 +333,7 @@ function initMap() {
   if (!mapContainer.value) return;
   mapInstance = new maplibregl.Map({
     container: mapContainer.value,
-    style: BASEMAPS[basemap.value],
+    style: styleUrl.value,
     center: [-2.5, 54.5],
     zoom: 5,
   });
@@ -483,8 +446,8 @@ onUnmounted(() => {
       :x="menuX"
       :y="menuY"
       :items="menuItems"
-      @select="onMenuSelect"
-      @close="menuOpen = false"
+      @select="onSelect"
+      @close="closeMenu"
     />
   </div>
 </template>
