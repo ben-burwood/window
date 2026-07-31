@@ -447,6 +447,7 @@ onUnmounted(async () => {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  scrollbar-gutter: stable;
   background: #525659;
   display: flex;
   flex-direction: column;

@@ -1,5 +1,6 @@
 /* doc-viewer app-specific globals. Base reset, typography and buttons come from
-   @window/ui/theme.css (imported first in main.ts). */
+   @window/ui/theme.css (imported first in main.ts) — including the
+   html/body/#app document-scroll lock, so it isn't repeated here. */
 #app {
   display: flex;
   flex-direction: column;

@@ -322,7 +322,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="mapContainer" class="map-container" @contextmenu.prevent="openMenu"></div>
+  <div ref="mapContainer" class="map-container" @contextmenu="openMenu"></div>
   <ContextMenu
     :open="menuOpen"
     :x="menuX"

@@ -121,6 +121,10 @@ html,
 body,
 #app {
   height: 100%;
+  /* These are full-window desktop apps: the document itself must never scroll.
+     Scrolling belongs to an inner pane (a viewer, a grid), so a stray overflow
+     can't produce a second scrollbar or push fixed chrome off-screen. */
+  overflow: hidden;
 }
 
 body {

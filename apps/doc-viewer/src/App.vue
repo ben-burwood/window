@@ -153,7 +153,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app" @contextmenu.prevent="openMenu">
+  <div class="app" @contextmenu="openMenu">
     <Toolbar v-if="loaded">
       <template #start>
         <span class="file-name" :title="loaded.name">{{ loaded.name }}</span>

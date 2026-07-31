@@ -449,7 +449,7 @@ onUnmounted(() => {
 
 <template>
   <div class="map-wrapper" :class="{ fetching: mapLoading }">
-    <div ref="mapContainer" class="map-container" @contextmenu.prevent="openMenu" />
+    <div ref="mapContainer" class="map-container" @contextmenu="openMenu" />
     <ContextMenu
       :open="menuOpen"
       :x="menuX"
