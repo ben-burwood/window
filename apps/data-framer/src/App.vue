@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, defineAsyncComponent, onMounted, onUnmounted } from "vue";
 import type { ColumnState, GridApi } from "ag-grid-community";
-import { Badge, EmptyState, Toolbar, ToolbarButton } from "@window/ui";
+import {
+  Badge,
+  ContextMenu,
+  type ContextMenuItem,
+  EmptyState,
+  Toolbar,
+  ToolbarButton,
+  useContextMenu,
+  useTheme,
+} from "@window/ui";
 import type { FileInfo, FilterSpec } from "./types";
 import {
   getStartupFile,
@@ -39,6 +48,23 @@ const error = ref<string | null>(null);
 const dragging = ref(false);
 const outdated = ref(false);
 const unlisteners: Array<() => void> = [];
+
+const mapView = ref<{
+  basemapItems: () => ContextMenuItem[];
+  selectBasemap: (id: string) => boolean;
+} | null>(null);
+const { open: menuOpen, x: menuX, y: menuY, openMenu, close: closeMenu } = useContextMenu();
+const { menuItem: themeItem, handleSelect: handleThemeSelect } = useTheme();
+const menuItems = computed(() => {
+  const base = currentView.value === "map" ? (mapView.value?.basemapItems() ?? []) : [];
+  return base.length
+    ? [...base, { id: "sep", separator: true }, themeItem.value]
+    : [themeItem.value];
+});
+function onMenuSelect(id: string) {
+  if (handleThemeSelect(id)) return;
+  mapView.value?.selectBasemap(id);
+}
 
 // Extensions this app can open (validated on drag-drop).
 const SUPPORTED_EXTENSIONS = ["csv", "parquet"];
@@ -241,7 +267,7 @@ function onColumnsReset() {
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" @contextmenu="openMenu">
     <Toolbar v-if="view === 'loaded'">
       <template #start>
         <span class="file-name">{{ fileName }}</span>
@@ -322,6 +348,7 @@ function onColumnsReset() {
         <MapView
           v-if="hasMapData"
           v-show="currentView === 'map'"
+          ref="mapView"
           :active="currentView === 'map'"
           :activeFilters="activeFilters"
           :latColumn="latColumn"
@@ -347,6 +374,15 @@ function onColumnsReset() {
         @open="chooseFile"
       />
     </main>
+
+    <ContextMenu
+      :open="menuOpen"
+      :x="menuX"
+      :y="menuY"
+      :items="menuItems"
+      @select="onMenuSelect"
+      @close="closeMenu"
+    />
   </div>
 </template>
 

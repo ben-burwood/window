@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
-import { Badge, EmptyState, Toolbar, ToolbarButton } from "@window/ui";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import {
+  Badge,
+  ContextMenu,
+  EmptyState,
+  Toolbar,
+  ToolbarButton,
+  useContextMenu,
+  useTheme,
+} from "@window/ui";
 import MapView from "./components/MapView.vue";
 import { toFeatureCollection, fileKind, type LoadedSource } from "./types";
 import {
@@ -21,6 +29,20 @@ const loading = ref(false);
 const dragging = ref(false);
 const outdated = ref(false);
 const unlisteners: Array<() => void> = [];
+
+const mapView = ref<InstanceType<typeof MapView> | null>(null);
+const { open: menuOpen, x: menuX, y: menuY, openMenu, close: closeMenu } = useContextMenu();
+const { menuItem: themeItem, handleSelect: handleThemeSelect } = useTheme();
+const menuItems = computed(() => {
+  const base = mapView.value?.basemapItems() ?? [];
+  return base.length
+    ? [...base, { id: "sep", separator: true }, themeItem.value]
+    : [themeItem.value];
+});
+function onMenuSelect(id: string) {
+  if (handleThemeSelect(id)) return;
+  mapView.value?.selectBasemap(id);
+}
 
 // Extensions this app can open (validated on drag-drop).
 const SUPPORTED_EXTENSIONS = ["geojson", "pmtiles", "geoparquet"];
@@ -117,7 +139,7 @@ onUnmounted(() => unlisteners.forEach((u) => u()));
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" @contextmenu="openMenu">
     <Toolbar v-if="loaded">
       <template #start>
         <span class="file-name">{{ loaded.name }}</span>
@@ -137,7 +159,7 @@ onUnmounted(() => unlisteners.forEach((u) => u()));
     </Toolbar>
 
     <main class="content">
-      <MapView v-if="loaded" :source="loaded" @error="onMapError" @layers="onLayers" />
+      <MapView v-if="loaded" ref="mapView" :source="loaded" @error="onMapError" @layers="onLayers" />
 
       <EmptyState
         v-else
@@ -149,6 +171,15 @@ onUnmounted(() => unlisteners.forEach((u) => u()));
         @open="chooseFile"
       />
     </main>
+
+    <ContextMenu
+      :open="menuOpen"
+      :x="menuX"
+      :y="menuY"
+      :items="menuItems"
+      @select="onMenuSelect"
+      @close="closeMenu"
+    />
   </div>
 </template>
 

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted, nextTick } from "vue";
+import { ref, watch, onUnmounted, nextTick } from "vue";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { ContextMenu, useContextMenu, useTheme } from "@window/ui";
 import { useBasemap } from "@window/map";
 import { cellToBoundary } from "h3-js";
 import { getMapPoints, getH3Values, getGeometry, getRow } from "../bridge";
@@ -254,21 +253,15 @@ const OVERLAY_LAYER_IDS = [
   "geometry-outline",
   "geometry-points",
 ];
-const { open: menuOpen, x: menuX, y: menuY, openMenu, close: closeMenu } = useContextMenu();
 const { styleUrl, items: basemapItems, select: selectBasemap } = useBasemap({
   getMap: () => mapInstance,
   overlaySourceIds: () => OVERLAY_SOURCE_IDS,
   overlayLayerIds: () => OVERLAY_LAYER_IDS,
 });
-const { menuItem: themeItem, handleSelect: handleThemeSelect } = useTheme();
-const menuItems = computed(() => [
-  ...basemapItems.value,
-  { id: "sep", separator: true },
-  themeItem.value,
-]);
-function onSelect(id: string) {
-  if (!handleThemeSelect(id)) selectBasemap(id);
-}
+defineExpose({
+  basemapItems: () => basemapItems.value,
+  selectBasemap,
+});
 
 const POINTS_LAYER: maplibregl.CircleLayerSpecification = {
   id: "points",
@@ -449,15 +442,7 @@ onUnmounted(() => {
 
 <template>
   <div class="map-wrapper" :class="{ fetching: mapLoading }">
-    <div ref="mapContainer" class="map-container" @contextmenu="openMenu" />
-    <ContextMenu
-      :open="menuOpen"
-      :x="menuX"
-      :y="menuY"
-      :items="menuItems"
-      @select="onSelect"
-      @close="closeMenu"
-    />
+    <div ref="mapContainer" class="map-container" />
   </div>
 </template>
 

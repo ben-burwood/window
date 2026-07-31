@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import maplibregl, { type MapGeoJSONFeature } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { PMTiles, Protocol, TileType } from "pmtiles";
-import { ContextMenu, useContextMenu, useTheme } from "@window/ui";
 import { useBasemap } from "@window/map";
 import { convertFileSrc } from "@window/bridge";
 import type { FeatureCollection } from "geojson";
@@ -47,23 +46,15 @@ const PALETTE = [
   "#65a30d",
 ];
 
-// Right-click context menu: basemap switcher + theme toggle. Overlay ids are
-// read lazily at switch time so the dynamic layer list (addedLayerIds) is current.
-const { open: menuOpen, x: menuX, y: menuY, openMenu, close: closeMenu } = useContextMenu();
 const { styleUrl, items: basemapItems, select: selectBasemap } = useBasemap({
   getMap: () => mapInstance,
   overlaySourceIds: () => SOURCE_IDS,
   overlayLayerIds: () => addedLayerIds,
 });
-const { menuItem: themeItem, handleSelect: handleThemeSelect } = useTheme();
-const menuItems = computed(() => [
-  ...basemapItems.value,
-  { id: "sep", separator: true },
-  themeItem.value,
-]);
-function onSelect(id: string) {
-  if (!handleThemeSelect(id)) selectBasemap(id);
-}
+defineExpose({
+  basemapItems: () => basemapItems.value,
+  selectBasemap,
+});
 
 function escapeHtml(value: unknown): string {
   return String(value)
@@ -322,15 +313,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="mapContainer" class="map-container" @contextmenu="openMenu"></div>
-  <ContextMenu
-    :open="menuOpen"
-    :x="menuX"
-    :y="menuY"
-    :items="menuItems"
-    @select="onSelect"
-    @close="closeMenu"
-  />
+  <div ref="mapContainer" class="map-container"></div>
 </template>
 
 <style scoped>
