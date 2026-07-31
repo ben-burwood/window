@@ -1,0 +1,44 @@
+# Workspace root for the viewers monorepo.
+# Four independently-built binaries share one lockfile, one target/, and one toolchain.
+[workspace]
+resolver = "2"
+members = [
+  "crates/window-core",
+  "crates/window-tauri",
+  "apps/data-framer/src-tauri",
+  "apps/map-windower/src-tauri",
+  "apps/doc-viewer/src-tauri",
+  "apps/image-shutter",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+license = "MIT"
+authors = ["Ben Burwood"]
+
+# Shared dependency versions. Apps opt in with e.g. `serde = { workspace = true }`, and may add extra features on top (e.g. tauri's `protocol-asset`).
+# App-specific deps (polars, arrow/parquet, resvg, ...) stay in their app's Cargo.toml.
+[workspace.dependencies]
+# Internal
+window-core = { path = "crates/window-core" }
+window-tauri = { path = "crates/window-tauri" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Tauri
+tauri = { version = "2", features = [] }
+tauri-build = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+geozero = { version = "0.15.1", default-features = false, features = ["with-wkb", "with-geojson"] }
+
+[workspace.lints.clippy]
+
+# Release profile lives only in the workspace root (per-crate profiles are ignored in a workspace).
+# `panic = "abort"` is intentionally NOT set globally: it would apply to the Tauri apps too, and Tauri/wry are not validated against abort here.
+[profile.release]
+opt-level = 3
+lto = "thin"
+strip = true
+codegen-units = 1

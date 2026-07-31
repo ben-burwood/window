@@ -1,0 +1,14 @@
+{
+  "name": "window",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monorepo for four desktop file-viewer apps (data-framer, map-windower, doc-viewer, image-shutter).",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present"
+  }
+}

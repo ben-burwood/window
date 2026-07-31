@@ -1,0 +1,14 @@
+{
+  "name": "@window/map",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared MapLibre helpers for the viewer map apps — basemap definitions and the right-click basemap menu.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "maplibre-gl": "^5.24.0",
+    "vue": "^3.5"
+  }
+}

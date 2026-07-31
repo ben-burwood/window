@@ -1,0 +1,77 @@
+name: Release (Tauri apps)
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release-tauri:
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [data-framer, map-windower, doc-viewer]
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+        include:
+          - platform: macos-latest
+            args: --target universal-apple-darwin
+          - platform: ubuntu-latest
+            args: ""
+          - platform: windows-latest
+            args: ""
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: System deps (Linux)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: rustup show
+      - name: Add macOS universal target
+        if: matrix.platform == 'macos-latest'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # Keyed on the single root Cargo.lock via rust-cache's default lockfile hashing.
+          shared-key: release
+          workspaces: ". -> target"
+
+      - run: npm ci
+
+      - name: Build & publish ${{ matrix.app }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Updater signing (optional; deferred feature — secrets may be unset for now).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Apple code-signing / notarization (optional).
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: apps/${{ matrix.app }}
+          # Merge the shared base config (publisher/category/targets/build commands) via an
+          # absolute path so it resolves regardless of the CLI's working directory.
+          args: ${{ matrix.args }} --config ${{ github.workspace }}/tauri.base.json
+          tagName: ${{ github.ref_name }}
+          releaseName: "Window ${{ github.ref_name }}"
+          releaseDraft: true
+          prerelease: false

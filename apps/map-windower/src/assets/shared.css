@@ -1,0 +1,39 @@
+/* map-windower app-specific globals. Base reset, typography and buttons come from
+   @window/ui/theme.css (imported first in main.ts). */
+#app {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Popup content styling for feature properties (MapLibre popups render outside Vue). */
+.feature-popup {
+  max-height: 260px;
+  max-width: 280px;
+  overflow: auto;
+  font-size: var(--vw-fs-md);
+}
+
+.feature-popup table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.feature-popup th,
+.feature-popup td {
+  text-align: left;
+  padding: 2px 6px;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.feature-popup th {
+  color: var(--vw-fg-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.feature-popup .empty {
+  color: var(--vw-fg-subtle);
+  font-style: italic;
+}

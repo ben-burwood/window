@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.set.outputs.rust }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            shared:
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+              - 'rust-toolchain.toml'
+              - '.cargo/**'
+              - 'crates/**'
+              - 'packages/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tauri.base.json'
+              - '.github/workflows/**'
+            data-framer:
+              - 'apps/data-framer/**'
+            map-windower:
+              - 'apps/map-windower/**'
+            doc-viewer:
+              - 'apps/doc-viewer/**'
+            image-shutter:
+              - 'apps/image-shutter/**'
+      - id: set
+        env:
+          SHARED: ${{ steps.f.outputs.shared }}
+          DF: ${{ steps.f.outputs.data-framer }}
+          MW: ${{ steps.f.outputs.map-windower }}
+          DV: ${{ steps.f.outputs.doc-viewer }}
+          IS: ${{ steps.f.outputs.image-shutter }}
+        run: |
+          rust='[]'
+          add() { rust=$(jq -c ". += [$1]" <<<"$rust"); }
+          on() { [ "$SHARED" = "true" ] || [ "$1" = "true" ]; }
+          # crate = cargo package name; deps = system libs to install; web = frontend to build
+          if on "$DF"; then add '{"crate":"data-framer","deps":"webkit","web":"data-framer"}'; fi
+          if on "$MW"; then add '{"crate":"map-windower","deps":"webkit","web":"map-windower"}'; fi
+          if on "$DV"; then add '{"crate":"doc-viewer","deps":"webkit","web":"doc-viewer"}'; fi
+          if on "$IS"; then add '{"crate":"image-shutter","deps":"egui","web":""}'; fi
+          if [ "$SHARED" = "true" ]; then
+            add '{"crate":"window-core","deps":"none","web":""}'
+            add '{"crate":"window-tauri","deps":"webkit","web":""}'
+          fi
+          echo "rust={\"include\":$rust}" >> "$GITHUB_OUTPUT"
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: rustup show # installs the toolchain pinned by rust-toolchain.toml
+      - run: cargo fmt --all --check
+
+  # Frontend formatting gate (Vite+ / Oxfmt), the JS/TS/Vue counterpart to `cargo fmt`.
+  fmt-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Vite+ (vp)
+        run: |
+          curl -fsSL https://vite.plus | bash
+          echo "$HOME/.vite-plus/bin" >> "$GITHUB_PATH"
+      - run: vp fmt --check
+
+  rust:
+    needs: changes
+    if: needs.changes.outputs.rust != '{"include":[]}'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.changes.outputs.rust) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: System deps (Tauri / webkit)
+        if: matrix.deps == 'webkit'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
+
+      - name: System deps (egui)
+        if: matrix.deps == 'egui'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev \
+            libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
+
+      # Tauri app crates embed the built frontend at compile time (generate_context! reads
+      # ../dist), so build the frontend first. `npm run build` also runs vue-tsc (typecheck).
+      - uses: actions/setup-node@v4
+        if: matrix.web != ''
+        with:
+          node-version: 20
+          cache: npm
+      - if: matrix.web != ''
+        run: npm ci
+      - if: matrix.web != ''
+        run: npm run build --workspace ${{ matrix.web }}
+
+      - run: rustup show # installs the pinned toolchain + clippy/rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # One cache shared across app jobs, keyed on the single root Cargo.lock.
+          shared-key: workspace
+      - name: clippy
+        run: cargo clippy -p ${{ matrix.crate }} --all-targets -- -D warnings
+      - name: test
+        run: cargo test -p ${{ matrix.crate }}

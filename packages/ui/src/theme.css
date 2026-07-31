@@ -1,0 +1,187 @@
+/*
+ * @window/ui — shared design tokens + base reset.
+ *
+ * Light is the default. Dark applies either automatically (OS `prefers-color-scheme`
+ * when the user hasn't chosen) or explicitly via `<html data-theme="dark">`, which
+ * `useTheme()` sets to override the OS. `data-theme="light"` forces light regardless
+ * of the OS. The dark token block is duplicated below for these two triggers.
+ */
+:root {
+  /* Neutral surface + text scale (slate) */
+  --vw-bg: #ffffff;
+  --vw-surface: #f8fafc;
+  --vw-surface-2: #f1f5f9;
+  --vw-border: #e2e8f0;
+  --vw-border-strong: #cbd5e1;
+  --vw-fg: #0f172a;
+  --vw-fg-muted: #64748b;
+  --vw-fg-subtle: #94a3b8;
+
+  /* Accent */
+  --vw-accent: #4a6eb0;
+  --vw-accent-hover: #3f5e98;
+  --vw-accent-active: #34507f;
+  --vw-accent-fg: #ffffff;
+  --vw-accent-weak: #eef2fa;
+
+  /* Feedback */
+  --vw-danger: #dc2626;
+  --vw-danger-weak: #fef2f2;
+
+  /* Radii */
+  --vw-radius-sm: 6px;
+  --vw-radius: 8px;
+  --vw-radius-lg: 12px;
+
+  /* Spacing scale */
+  --vw-space-1: 4px;
+  --vw-space-2: 8px;
+  --vw-space-3: 12px;
+  --vw-space-4: 16px;
+  --vw-space-5: 24px;
+  --vw-space-6: 32px;
+
+  /* Typography */
+  --vw-font:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --vw-font-mono:
+    ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  --vw-fs-xs: 11px;
+  --vw-fs-sm: 12px;
+  --vw-fs-md: 13px;
+  --vw-fs-lg: 15px;
+  --vw-fs-xl: 20px;
+
+  /* Elevation */
+  --vw-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --vw-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 6px 16px rgba(15, 23, 42, 0.08);
+
+  /* Control geometry */
+  --vw-control-h: 32px;
+}
+
+/* Dark tokens. Kept identical between the two selectors below: the OS default
+ * (only when the user hasn't picked) and the explicit `data-theme="dark"`. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --vw-bg: #0f172a;
+    --vw-surface: #131c31;
+    --vw-surface-2: #1e293b;
+    --vw-border: #293548;
+    --vw-border-strong: #3b4a63;
+    --vw-fg: #e8edf5;
+    --vw-fg-muted: #94a3b8;
+    --vw-fg-subtle: #64748b;
+
+    --vw-accent: #6b8fd0;
+    --vw-accent-hover: #89a6dc;
+    --vw-accent-active: #a9c1e8;
+    --vw-accent-fg: #ffffff;
+    --vw-accent-weak: #18243c;
+
+    --vw-danger: #f87171;
+    --vw-danger-weak: #2a1414;
+
+    --vw-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --vw-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+}
+
+:root[data-theme="dark"] {
+  --vw-bg: #0f172a;
+  --vw-surface: #131c31;
+  --vw-surface-2: #1e293b;
+  --vw-border: #293548;
+  --vw-border-strong: #3b4a63;
+  --vw-fg: #e8edf5;
+  --vw-fg-muted: #94a3b8;
+  --vw-fg-subtle: #64748b;
+
+  --vw-accent: #6b8fd0;
+  --vw-accent-hover: #89a6dc;
+  --vw-accent-active: #a9c1e8;
+  --vw-accent-fg: #ffffff;
+  --vw-accent-weak: #18243c;
+
+  --vw-danger: #f87171;
+  --vw-danger-weak: #2a1414;
+
+  --vw-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --vw-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- base reset ---------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  /* These are full-window desktop apps: the document itself must never scroll.
+     Scrolling belongs to an inner pane (a viewer, a grid), so a stray overflow
+     can't produce a second scrollbar or push fixed chrome off-screen. */
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  font-family: var(--vw-font);
+  font-size: var(--vw-fs-md);
+  line-height: 1.5;
+  color: var(--vw-fg);
+  background: var(--vw-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- shared utility classes ---------------------------------------------- */
+/* A neutral button. Add `.vw-btn--primary` for the accent variant. */
+.vw-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vw-space-2);
+  height: var(--vw-control-h);
+  padding: 0 var(--vw-space-3);
+  border: 1px solid var(--vw-border-strong);
+  border-radius: var(--vw-radius-sm);
+  background: var(--vw-bg);
+  color: var(--vw-fg);
+  font: inherit;
+  font-size: var(--vw-fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+.vw-btn:hover:not(:disabled) {
+  background: var(--vw-surface-2);
+  border-color: var(--vw-fg-subtle);
+}
+.vw-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.vw-btn--primary {
+  background: var(--vw-accent);
+  border-color: var(--vw-accent);
+  color: var(--vw-accent-fg);
+}
+.vw-btn--primary:hover:not(:disabled) {
+  background: var(--vw-accent-hover);
+  border-color: var(--vw-accent-hover);
+}
+
+/* A bordered surface panel. */
+.vw-panel {
+  background: var(--vw-surface);
+  border: 1px solid var(--vw-border);
+  border-radius: var(--vw-radius);
+}

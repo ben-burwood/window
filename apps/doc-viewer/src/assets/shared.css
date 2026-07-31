@@ -1,0 +1,50 @@
+/* doc-viewer app-specific globals. Base reset, typography and buttons come from
+   @window/ui/theme.css (imported first in main.ts) — including the
+   html/body/#app document-scroll lock, so it isn't repeated here. */
+#app {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* PDF.js text layer — invisible, selectable text aligned over the canvas.
+   These target runtime-generated spans, so they must be global (not scoped). */
+.textLayer {
+  position: absolute;
+  text-align: initial;
+  inset: 0;
+  overflow: clip;
+  opacity: 1;
+  line-height: 1;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  z-index: 2;
+}
+
+.textLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+.textLayer span[role="img"] {
+  user-select: none;
+  cursor: default;
+}
+
+.textLayer ::selection {
+  background: color-mix(in srgb, var(--vw-accent) 40%, transparent);
+}
+
+/* Find matches, drawn behind the transparent text via the Highlight API. */
+::highlight(pdf-find) {
+  background-color: rgba(255, 213, 74, 0.5);
+}
+
+::highlight(pdf-find-current) {
+  background-color: rgba(255, 145, 0, 0.75);
+}
