@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -65,7 +66,7 @@ jobs:
           echo "rust={\"include\":$rust}" >> "$GITHUB_OUTPUT"
 
   fmt:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - run: rustup show # installs the toolchain pinned by rust-toolchain.toml
@@ -76,6 +77,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
       - name: Install Vite+ (vp)
         run: |
           curl -fsSL https://vite.plus | bash
