@@ -17,12 +17,12 @@
   --vw-fg-muted: #64748b;
   --vw-fg-subtle: #94a3b8;
 
-  /* Accent (indigo) */
-  --vw-accent: #4f46e5;
-  --vw-accent-hover: #4338ca;
-  --vw-accent-active: #3730a3;
+  /* Accent */
+  --vw-accent: #4a6eb0;
+  --vw-accent-hover: #3f5e98;
+  --vw-accent-active: #34507f;
   --vw-accent-fg: #ffffff;
-  --vw-accent-weak: #eef2ff;
+  --vw-accent-weak: #eef2fa;
 
   /* Feedback */
   --vw-danger: #dc2626;
@@ -73,11 +73,11 @@
     --vw-fg-muted: #94a3b8;
     --vw-fg-subtle: #64748b;
 
-    --vw-accent: #6366f1;
-    --vw-accent-hover: #818cf8;
-    --vw-accent-active: #a5b4fc;
+    --vw-accent: #6b8fd0;
+    --vw-accent-hover: #89a6dc;
+    --vw-accent-active: #a9c1e8;
     --vw-accent-fg: #ffffff;
-    --vw-accent-weak: #1e1b4b;
+    --vw-accent-weak: #18243c;
 
     --vw-danger: #f87171;
     --vw-danger-weak: #2a1414;
@@ -97,11 +97,11 @@
   --vw-fg-muted: #94a3b8;
   --vw-fg-subtle: #64748b;
 
-  --vw-accent: #6366f1;
-  --vw-accent-hover: #818cf8;
-  --vw-accent-active: #a5b4fc;
+  --vw-accent: #6b8fd0;
+  --vw-accent-hover: #89a6dc;
+  --vw-accent-active: #a9c1e8;
   --vw-accent-fg: #ffffff;
-  --vw-accent-weak: #1e1b4b;
+  --vw-accent-weak: #18243c;
 
   --vw-danger: #f87171;
   --vw-danger-weak: #2a1414;
