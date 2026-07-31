@@ -114,7 +114,9 @@ function choose(item: ContextMenuItem) {
           :disabled="item.disabled"
           @click="choose(item)"
         >
-          <span class="vw-context-menu__check" aria-hidden="true">{{ item.checked ? "✓" : "" }}</span>
+          <span class="vw-context-menu__check" aria-hidden="true">{{
+            item.checked ? "✓" : ""
+          }}</span>
           <span class="vw-context-menu__label">{{ item.label }}</span>
         </button>
       </template>

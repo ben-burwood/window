@@ -5,7 +5,10 @@
   "description": "Shared build/TS config for the viewer apps: a Vite factory and a tsconfig base.",
   "type": "module",
   "exports": {
-    "./vite": "./vite.ts",
+    "./vite": {
+      "types": "./vite.d.ts",
+      "default": "./vite.js"
+    },
     "./tsconfig.base.json": "./tsconfig.base.json",
     "./eslint": "./eslint.config.mjs"
   },

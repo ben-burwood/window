@@ -253,7 +253,11 @@ const OVERLAY_LAYER_IDS = [
   "geometry-outline",
   "geometry-points",
 ];
-const { styleUrl, items: basemapItems, select: selectBasemap } = useBasemap({
+const {
+  styleUrl,
+  items: basemapItems,
+  select: selectBasemap,
+} = useBasemap({
   getMap: () => mapInstance,
   overlaySourceIds: () => OVERLAY_SOURCE_IDS,
   overlayLayerIds: () => OVERLAY_LAYER_IDS,

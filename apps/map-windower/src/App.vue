@@ -159,7 +159,13 @@ onUnmounted(() => unlisteners.forEach((u) => u()));
     </Toolbar>
 
     <main class="content">
-      <MapView v-if="loaded" ref="mapView" :source="loaded" @error="onMapError" @layers="onLayers" />
+      <MapView
+        v-if="loaded"
+        ref="mapView"
+        :source="loaded"
+        @error="onMapError"
+        @layers="onLayers"
+      />
 
       <EmptyState
         v-else

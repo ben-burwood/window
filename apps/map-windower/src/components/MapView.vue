@@ -46,7 +46,11 @@ const PALETTE = [
   "#65a30d",
 ];
 
-const { styleUrl, items: basemapItems, select: selectBasemap } = useBasemap({
+const {
+  styleUrl,
+  items: basemapItems,
+  select: selectBasemap,
+} = useBasemap({
   getMap: () => mapInstance,
   overlaySourceIds: () => SOURCE_IDS,
   overlayLayerIds: () => addedLayerIds,
