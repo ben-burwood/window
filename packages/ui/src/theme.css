@@ -1,7 +1,10 @@
 /*
  * @window/ui — shared design tokens + base reset.
  *
- * Light and dark are both defined; the app follows the OS via `prefers-color-scheme`.
+ * Light is the default. Dark applies either automatically (OS `prefers-color-scheme`
+ * when the user hasn't chosen) or explicitly via `<html data-theme="dark">`, which
+ * `useTheme()` sets to override the OS. `data-theme="light"` forces light regardless
+ * of the OS. The dark token block is duplicated below for these two triggers.
  */
 :root {
   /* Neutral surface + text scale (slate) */
@@ -57,8 +60,10 @@
   --vw-control-h: 32px;
 }
 
+/* Dark tokens. Kept identical between the two selectors below: the OS default
+ * (only when the user hasn't picked) and the explicit `data-theme="dark"`. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --vw-bg: #0f172a;
     --vw-surface: #131c31;
     --vw-surface-2: #1e293b;
@@ -80,6 +85,29 @@
     --vw-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
     --vw-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
   }
+}
+
+:root[data-theme="dark"] {
+  --vw-bg: #0f172a;
+  --vw-surface: #131c31;
+  --vw-surface-2: #1e293b;
+  --vw-border: #293548;
+  --vw-border-strong: #3b4a63;
+  --vw-fg: #e8edf5;
+  --vw-fg-muted: #94a3b8;
+  --vw-fg-subtle: #64748b;
+
+  --vw-accent: #6366f1;
+  --vw-accent-hover: #818cf8;
+  --vw-accent-active: #a5b4fc;
+  --vw-accent-fg: #ffffff;
+  --vw-accent-weak: #1e1b4b;
+
+  --vw-danger: #f87171;
+  --vw-danger-weak: #2a1414;
+
+  --vw-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --vw-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 /* ---- base reset ---------------------------------------------------------- */

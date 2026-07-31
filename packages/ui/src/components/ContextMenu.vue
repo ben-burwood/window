@@ -1,10 +1,12 @@
 <script lang="ts">
 export interface ContextMenuItem {
   id: string;
-  label: string;
+  label?: string;
   /** Show a check mark in the left gutter (for toggle/radio-style items). */
   checked?: boolean;
   disabled?: boolean;
+  /** Render a non-interactive divider instead of a menu item. */
+  separator?: boolean;
 }
 </script>
 
@@ -100,20 +102,22 @@ function choose(item: ContextMenuItem) {
       role="menu"
       :style="{ left: `${left}px`, top: `${top}px` }"
     >
-      <button
-        v-for="item in items"
-        :key="item.id"
-        class="vw-context-menu__item"
-        :class="{ 'is-checked': item.checked }"
-        type="button"
-        role="menuitemradio"
-        :aria-checked="item.checked ? 'true' : 'false'"
-        :disabled="item.disabled"
-        @click="choose(item)"
-      >
-        <span class="vw-context-menu__check" aria-hidden="true">{{ item.checked ? "✓" : "" }}</span>
-        <span class="vw-context-menu__label">{{ item.label }}</span>
-      </button>
+      <template v-for="item in items" :key="item.id">
+        <div v-if="item.separator" class="vw-context-menu__sep" role="separator"></div>
+        <button
+          v-else
+          class="vw-context-menu__item"
+          :class="{ 'is-checked': item.checked }"
+          type="button"
+          role="menuitemradio"
+          :aria-checked="item.checked ? 'true' : 'false'"
+          :disabled="item.disabled"
+          @click="choose(item)"
+        >
+          <span class="vw-context-menu__check" aria-hidden="true">{{ item.checked ? "✓" : "" }}</span>
+          <span class="vw-context-menu__label">{{ item.label }}</span>
+        </button>
+      </template>
     </div>
   </Teleport>
 </template>
@@ -171,5 +175,11 @@ function choose(item: ContextMenuItem) {
 
 .vw-context-menu__label {
   flex: 1 1 auto;
+}
+
+.vw-context-menu__sep {
+  height: 1px;
+  margin: var(--vw-space-1) 0;
+  background: var(--vw-border);
 }
 </style>

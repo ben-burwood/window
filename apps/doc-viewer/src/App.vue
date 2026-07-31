@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
-import { Badge, EmptyState, Toolbar, ToolbarButton } from "@window/ui";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import {
+  Badge,
+  ContextMenu,
+  EmptyState,
+  Toolbar,
+  ToolbarButton,
+  useContextMenu,
+  useTheme,
+} from "@window/ui";
 import PdfView from "./components/PdfView.vue";
 import { isPdf, PDF_EXTENSIONS, type LoadedSource, type ViewerState } from "./types";
 import {
@@ -19,6 +27,11 @@ const loading = ref(false);
 const dragging = ref(false);
 const outdated = ref(false);
 const unlisteners: Array<() => void> = [];
+
+// Right-click context menu with a light/dark theme toggle.
+const { open: menuOpen, x: menuX, y: menuY, openMenu, close: closeMenu } = useContextMenu();
+const { menuItem: themeItem, handleSelect: onMenuSelect } = useTheme();
+const menuItems = computed(() => [themeItem.value]);
 
 const viewer = ref<InstanceType<typeof PdfView> | null>(null);
 
@@ -140,7 +153,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" @contextmenu.prevent="openMenu">
     <Toolbar v-if="loaded">
       <template #start>
         <span class="file-name" :title="loaded.name">{{ loaded.name }}</span>
@@ -240,6 +253,15 @@ onUnmounted(() => {
         @open="chooseFile"
       />
     </main>
+
+    <ContextMenu
+      :open="menuOpen"
+      :x="menuX"
+      :y="menuY"
+      :items="menuItems"
+      @select="onMenuSelect"
+      @close="closeMenu"
+    />
   </div>
 </template>
 

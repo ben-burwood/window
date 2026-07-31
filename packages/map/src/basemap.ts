@@ -16,7 +16,7 @@ export interface BasemapMenuItem {
   checked: boolean;
 }
 
-export interface UseBasemapMenuOptions {
+export interface UseBasemapOptions {
   /** Returns the live MapLibre instance (held outside Vue reactivity by callers). */
   getMap: () => maplibregl.Map | null;
   /** Source ids to carry across a basemap switch. Resolved lazily at switch time. */
@@ -27,21 +27,20 @@ export interface UseBasemapMenuOptions {
   initial?: Basemap;
 }
 
-// Owns the current basemap and the right-click menu state, and switches the
-// base style without disturbing the caller's data overlay.
+// Owns the current basemap and switches the base style without disturbing the
+// caller's data overlay. Menu open/position state is left to the host (see
+// @window/ui's useContextMenu) so the basemap items can be combined with other
+// menu entries such as the theme toggle.
 //
 // These are full style documents, so we switch with setStyle rather than
 // toggling layer visibility. transformStyle re-merges the caller's overlay
 // sources/layers (by id) from the outgoing style into the incoming one, with
 // layers appended last so they stay on top of the new base map.
-export function useBasemapMenu(opts: UseBasemapMenuOptions) {
+export function useBasemap(opts: UseBasemapOptions) {
   const current = ref<Basemap>(opts.initial ?? "bright");
-  const menuOpen = ref(false);
-  const menuX = ref(0);
-  const menuY = ref(0);
 
   const styleUrl = computed(() => BASEMAPS[current.value].url);
-  const menuItems = computed<BasemapMenuItem[]>(() =>
+  const items = computed<BasemapMenuItem[]>(() =>
     (Object.keys(BASEMAPS) as Basemap[]).map((id) => ({
       id,
       label: BASEMAPS[id].label,
@@ -66,29 +65,13 @@ export function useBasemapMenu(opts: UseBasemapMenuOptions) {
     });
   }
 
-  function openMenu(e: MouseEvent) {
-    e.preventDefault();
-    menuX.value = e.clientX;
-    menuY.value = e.clientY;
-    menuOpen.value = true;
-  }
-  function closeMenu() {
-    menuOpen.value = false;
-  }
-  function onSelect(id: string) {
+  // Applies the selection if `id` names a basemap; returns whether it did, so a
+  // host can chain this with other menu-item handlers.
+  function select(id: string): boolean {
+    if (!(id in BASEMAPS)) return false;
     setBasemap(id as Basemap);
+    return true;
   }
 
-  return {
-    current,
-    styleUrl,
-    menuOpen,
-    menuX,
-    menuY,
-    menuItems,
-    setBasemap,
-    openMenu,
-    closeMenu,
-    onSelect,
-  };
+  return { current, styleUrl, items, select, setBasemap };
 }

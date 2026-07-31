@@ -6,3 +6,5 @@ export type { ContextMenuItem } from "./components/ContextMenu.vue";
 export { default as EmptyState } from "./components/EmptyState.vue";
 export { default as Toolbar } from "./components/Toolbar.vue";
 export { default as ToolbarButton } from "./components/ToolbarButton.vue";
+export { useContextMenu } from "./composables/useContextMenu";
+export { useTheme, type Theme } from "./composables/useTheme";
