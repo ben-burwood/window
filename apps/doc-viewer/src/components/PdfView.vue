@@ -26,6 +26,9 @@ type FitMode = "none" | "width" | "page";
 let fitMode: FitMode = "width";
 let findQuery = "";
 
+let loadedName: string | null = null;
+let savedView: { scale: number; fitMode: FitMode; page: number } | null = null;
+
 // Held outside Vue reactivity on purpose: PDF.js manages its own internal state
 // and should not be wrapped in a reactive proxy.
 let pdfDoc: PDFDocumentProxy | null = null;
@@ -200,6 +203,13 @@ async function destroyDoc() {
 }
 
 async function loadDocument(url: string) {
+  if (loadedName === props.source.name && numPages.value > 0) {
+    savedView = { scale: scale.value, fitMode, page: currentPage.value };
+  } else {
+    savedView = null;
+  }
+  loadedName = props.source.name;
+
   await destroyDoc();
   numPages.value = 0;
   currentPage.value = 1;
@@ -225,6 +235,15 @@ async function loadDocument(url: string) {
     applyFit();
     await renderAll();
     observePages();
+    if (savedView) {
+      fitMode = savedView.fitMode;
+      if (fitMode === "none") {
+        scale.value = clampScale(savedView.scale);
+        await renderAll();
+      }
+      goto(savedView.page); // clamps to [1, numPages] and scrolls into view
+      savedView = null;
+    }
   } catch (e) {
     emit("error", e instanceof Error ? e.message : String(e));
   }
