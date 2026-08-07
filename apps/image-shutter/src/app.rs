@@ -1,5 +1,6 @@
 //! The Image Shutter application: window chrome, input handling (zoom / pan /
-//! fit), transparency checkerboard and on-demand SVG rasterization.
+//! fit), a transparency checkerboard (or optional white background) and
+//! on-demand SVG rasterization.
 
 use egui::{Color32, Rect, Sense, TextureHandle, TextureOptions, Vec2, ViewportCommand};
 use std::path::{Path, PathBuf};
@@ -34,6 +35,8 @@ pub struct ImageShutterApp {
     fit_pending: bool,
     /// Set after a load so the window title is refreshed once next frame.
     title_dirty: bool,
+    /// When true, paint a solid white background instead of the transparency checkerboard.
+    white_bg: bool,
     /// Path of the loaded file, used to reload.
     current_path: Option<PathBuf>,
     /// Set by the file watcher (on its own thread) when the file changes on disk.
@@ -56,6 +59,7 @@ impl ImageShutterApp {
             offset: Vec2::ZERO,
             fit_pending: false,
             title_dirty: true,
+            white_bg: false,
             current_path: None,
             outdated: Arc::new(AtomicBool::new(false)),
             _watch: None,
@@ -231,11 +235,13 @@ impl eframe::App for ImageShutterApp {
                     });
                 });
 
-                // Right — open a file.
+                // Right — open a file and toggle the background fill.
                 cols[2].with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("📂 Open").clicked() {
                         self.open_dialog();
                     }
+                    ui.toggle_value(&mut self.white_bg, "⬜ White")
+                        .on_hover_text("Fill the background white instead of showing transparency");
                 });
             });
         });
@@ -337,7 +343,14 @@ impl ImageShutterApp {
         self.ensure_texture(ctx);
 
         let painter = ui.painter_at(content);
-        paint_checkerboard(&painter, content, img_rect);
+        if self.white_bg {
+            let area = content.intersect(img_rect);
+            if area.width() > 0.0 && area.height() > 0.0 {
+                painter.rect_filled(area, 0.0, Color32::WHITE);
+            }
+        } else {
+            paint_checkerboard(&painter, content, img_rect);
+        }
         if let Some(tex) = &self.texture {
             painter.image(
                 tex.id(),
