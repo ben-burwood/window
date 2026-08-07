@@ -1557,7 +1557,7 @@ dependencies = [
 
 [[package]]
 name = "data-framer"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "geozero",
@@ -1719,7 +1719,7 @@ dependencies = [
 
 [[package]]
 name = "doc-viewer"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -3317,7 +3317,7 @@ dependencies = [
 
 [[package]]
 name = "image-shutter"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "eframe",
  "egui",
@@ -3843,7 +3843,7 @@ dependencies = [
 
 [[package]]
 name = "map-windower"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "arrow-array",
  "arrow-json",
@@ -8930,7 +8930,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "window-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "notify",
  "notify-debouncer-mini",
@@ -8938,7 +8938,7 @@ dependencies = [
 
 [[package]]
 name = "window-tauri"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "tauri",
  "tauri-plugin-dialog",
