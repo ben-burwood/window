@@ -43,6 +43,8 @@ jobs:
               - 'apps/doc-viewer/**'
             image-shutter:
               - 'apps/image-shutter/**'
+            drawing-paner:
+              - 'apps/drawing-paner/**'
       - id: set
         env:
           SHARED: ${{ steps.f.outputs.shared }}
@@ -50,6 +52,7 @@ jobs:
           MW: ${{ steps.f.outputs.map-windower }}
           DV: ${{ steps.f.outputs.doc-viewer }}
           IS: ${{ steps.f.outputs.image-shutter }}
+          DP: ${{ steps.f.outputs.drawing-paner }}
         run: |
           rust='[]'
           add() { rust=$(jq -c ". += [$1]" <<<"$rust"); }
@@ -59,6 +62,7 @@ jobs:
           if on "$MW"; then add '{"crate":"map-windower","deps":"webkit","web":"map-windower"}'; fi
           if on "$DV"; then add '{"crate":"doc-viewer","deps":"webkit","web":"doc-viewer"}'; fi
           if on "$IS"; then add '{"crate":"image-shutter","deps":"egui","web":""}'; fi
+          if on "$DP"; then add '{"crate":"drawing-paner","deps":"egui","web":""}'; fi
           if [ "$SHARED" = "true" ]; then
             add '{"crate":"window-core","deps":"none","web":""}'
             add '{"crate":"window-tauri","deps":"webkit","web":""}'

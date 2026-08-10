@@ -1,8 +1,8 @@
 [package]
-name = "image-shutter"
+name = "drawing-paner"
 version.workspace = true
 edition.workspace = true
-description = "A tiny, fast, native SVG viewer"
+description = "A tiny, fast, native DXF viewer"
 authors.workspace = true
 license.workspace = true
 rust-version.workspace = true
@@ -16,21 +16,18 @@ workspace = true
 window-core = { workspace = true }
 eframe = "0.35"
 egui = "0.35"
-usvg = "0.47"
-resvg = "0.47"
-tiny-skia = "0.12"
 rfd = "0.15"
-flate2 = "1"
+dxf = "0.6"
 
 # ---------------------------------------------------------------------------
 # cargo-packager configuration (https://github.com/crabnebula-dev/cargo-packager)
 # Produces .dmg/.app (macOS), NSIS .exe (Windows), .deb/.AppImage (Linux),
-# registers the SVG file association on every platform, and generates the
+# registers the DXF file association on every platform, and generates the
 # platform icons from icons/icon.png.
 # ---------------------------------------------------------------------------
 [package.metadata.packager]
-product-name = "Image Shutter"
-identifier = "com.image-shutter.app"
+product-name = "Drawing Paner"
+identifier = "com.drawing-paner.app"
 before-packaging-command = "cargo build --release"
 icons = ["icons/icon.png"]
 out-dir = "dist"
@@ -41,10 +38,10 @@ license-file = "LICENSE"
 homepage = "https://github.com/ben-burwood/window"
 
 [[package.metadata.packager.file-associations]]
-extensions = ["svg", "svgz"]
-mime-type = "image/svg+xml"
-description = "Scalable Vector Graphics"
-name = "SVG Image"
+extensions = ["dxf"]
+mime-type = "image/vnd.dxf"
+description = "AutoCAD DXF Drawing"
+name = "DXF Drawing"
 role = "viewer"
 
 # --- Code signing (unsigned for now — fill in when certs are available) ------

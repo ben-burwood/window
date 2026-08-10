@@ -7,6 +7,7 @@ members = [
   "apps/map-windower/src-tauri",
   "apps/doc-viewer/src-tauri",
   "apps/image-shutter",
+  "apps/drawing-paner",
 ]
 
 [workspace.package]

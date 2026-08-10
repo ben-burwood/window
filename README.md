@@ -10,17 +10,18 @@ A monorepo for four small desktop file-viewer applications that share a framewor
 | `map-windower`  | GeoJSON       | Tauri v2 + Vue 3 (MapLibre)            |
 | `doc-viewer`    | PDF           | Tauri v2 + Vue 3 (PDF.js)              |
 | `image-shutter` | SVG           | egui / eframe + resvg (cargo-packager) |
+| `drawing-paner` | DXF           | egui / eframe + dxf (cargo-packager)   |
 
 ## Layout
 
 ```
 crates/    window-core (pure Rust), window-tauri
 packages/  @window/ui, @window/bridge, @window/config  (consumed by the three Tauri apps)
-apps/      data-framer, map-windower, doc-viewer, image-shutter
+apps/      data-framer, map-windower, doc-viewer, image-shutter, drawing-paner
 ```
 
-The egui app (`image-shutter`) is a crate under `apps/`, not `crates/` — it shares
-`window-core` but none of the frontend packages.
+The egui apps (`image-shutter`, `drawing-paner`) are crates under `apps/`, not
+`crates/` — they share `window-core` but none of the frontend packages.
 
 ## Toolchain
 
