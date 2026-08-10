@@ -14,6 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        app: [image-shutter]
+        platform: [macos-latest, ubuntu-latest, windows-latest]
         include:
           - platform: macos-latest
             formats: dmg
@@ -46,7 +48,7 @@ jobs:
         run: cargo install cargo-packager --locked
 
       - name: Build & package
-        working-directory: apps/image-shutter
+        working-directory: apps/${{ matrix.app }}
         run: cargo packager --release --formats ${{ matrix.formats }}
 
       - name: Publish to draft release
@@ -58,8 +60,8 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: false
           files: |
-            apps/image-shutter/dist/*.dmg
-            apps/image-shutter/dist/*.deb
-            apps/image-shutter/dist/*.AppImage
-            apps/image-shutter/dist/*.exe
-            apps/image-shutter/dist/*.msi
+            apps/${{ matrix.app }}/dist/*.dmg
+            apps/${{ matrix.app }}/dist/*.deb
+            apps/${{ matrix.app }}/dist/*.AppImage
+            apps/${{ matrix.app }}/dist/*.exe
+            apps/${{ matrix.app }}/dist/*.msi

@@ -36,12 +36,18 @@ window_tauri::get_startup_file, /* your commands */ ]).run(tauri::generate_conte
    via `npm run tauri --workspace <name> -- build --config ../../tauri.base.json` (or the
    release workflow), and a manual launch + double-click-open smoke test.
 
-## A new egui viewer (like image-shutter)
+## A new egui viewer (like image-shutter / drawing-paner)
 
 The crate _is_ the app — no `src-tauri/`, no frontend. Depend on `window-core` for the shared
-framework-free helpers (sniffing, etc.), keep your `[package.metadata.packager]` config for
-`cargo-packager`, add the crate to `[workspace] members`, and add a matrix row to
-`release-egui.yml`. Do **not** pull it into the Tauri shared frontend packages.
+framework-free helpers (sniffing, watching, etc.), keep your `[package.metadata.packager]` config
+for `cargo-packager`, and add the crate to `[workspace] members`. Do **not** pull it into the Tauri
+shared frontend packages.
+
+- **CI** (`.github/workflows/ci.yml`): add a `paths-filter` entry and a matrix row with
+  `"deps":"egui","web":""` (see the `image-shutter` / `drawing-paner` lines).
+- **Release** (`.github/workflows/release-egui.yml`): add the crate name to the `app:` matrix list.
+  The workflow builds every app in that list across all three platforms, so no other change is
+  needed there.
 
 ## The rules that keep this working
 
