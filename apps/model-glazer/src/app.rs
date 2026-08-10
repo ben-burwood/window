@@ -78,7 +78,7 @@ impl ModelGlazerApp {
         self.outdated.store(false, Ordering::Relaxed);
         match mesh::load(path) {
             Ok(mesh) => {
-                self.file_name = file_name(path);
+                self.file_name = window_core::file_name(path);
                 self.tri_count = mesh.triangle_count();
                 self.camera.fit(&mesh.aabb);
                 self.model_aabb = Some(mesh.aabb);
@@ -94,7 +94,7 @@ impl ModelGlazerApp {
                 self.error = Some(e);
                 self.model_aabb = None;
                 self.tri_count = 0;
-                self.file_name = file_name(path);
+                self.file_name = window_core::file_name(path);
                 self.title_dirty = true;
                 self.current_path = None;
                 self._watch = None;
@@ -132,12 +132,6 @@ impl ModelGlazerApp {
             self.camera.fit(&aabb);
         }
     }
-}
-
-fn file_name(path: &Path) -> String {
-    path.file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default()
 }
 
 impl eframe::App for ModelGlazerApp {

@@ -75,10 +75,7 @@ impl ImageShutterApp {
         self.outdated.store(false, Ordering::Relaxed);
         match svg::load(path) {
             Ok(img) => {
-                self.file_name = path
-                    .file_name()
-                    .map(|n| n.to_string_lossy().into_owned())
-                    .unwrap_or_default();
+                self.file_name = window_core::file_name(path);
                 self.svg = Some(img);
                 self.texture = None;
                 self.tex_scale = 0.0;
@@ -94,10 +91,7 @@ impl ImageShutterApp {
                 self.error = Some(e);
                 self.svg = None;
                 self.texture = None;
-                self.file_name = path
-                    .file_name()
-                    .map(|n| n.to_string_lossy().into_owned())
-                    .unwrap_or_default();
+                self.file_name = window_core::file_name(path);
                 self.title_dirty = true;
                 self.current_path = None;
                 self._watch = None;

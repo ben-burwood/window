@@ -69,7 +69,7 @@ impl DrawingPanerApp {
 
     fn load(&mut self, path: &Path) {
         self.outdated.store(false, Ordering::Relaxed);
-        self.file_name = file_name(path);
+        self.file_name = window_core::file_name(path);
         self.title_dirty = true;
         match dxf::load(path) {
             Ok(drawing) => {
@@ -118,12 +118,6 @@ impl DrawingPanerApp {
             self.load(&path);
         }
     }
-}
-
-fn file_name(path: &Path) -> String {
-    path.file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default()
 }
 
 impl eframe::App for DrawingPanerApp {

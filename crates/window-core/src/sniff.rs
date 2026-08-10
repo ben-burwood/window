@@ -28,6 +28,22 @@ pub fn has_extension(path: impl AsRef<Path>, exts: &[&str]) -> bool {
     }
 }
 
+/// The final component of `path` (its file name) as an owned `String`, or the empty
+/// string if the path has no file name (e.g. it ends in `..` or is a root).
+///
+/// ```
+/// # use window_core::file_name;
+/// assert_eq!(file_name("dir/model.STL"), "model.STL");
+/// assert_eq!(file_name("noext"), "noext");
+/// assert_eq!(file_name("/"), "");
+/// ```
+pub fn file_name(path: impl AsRef<Path>) -> String {
+    path.as_ref()
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default()
+}
+
 /// True if `bytes` begin with the gzip magic number (`1f 8b`) — used to transparently
 /// handle gzip-compressed payloads such as `.svgz`.
 ///
@@ -64,6 +80,14 @@ mod tests {
         ));
         assert!(!has_extension("x.csv", &["pdf"]));
         assert!(!has_extension("noext", &["pdf"]));
+    }
+
+    #[test]
+    fn file_name_is_final_component() {
+        assert_eq!(file_name("a/b/model.stl"), "model.stl");
+        assert_eq!(file_name("model.stl"), "model.stl");
+        assert_eq!(file_name("noext"), "noext");
+        assert_eq!(file_name(""), "");
     }
 
     #[test]
