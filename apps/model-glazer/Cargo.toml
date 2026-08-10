@@ -1,0 +1,78 @@
+[package]
+name = "model-glazer"
+version.workspace = true
+edition.workspace = true
+description = "A tiny, fast, native 3D model viewer"
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository = "https://github.com/ben-burwood/window"
+readme = "README.md"
+
+[lints]
+workspace = true
+
+[dependencies]
+window-core = { workspace = true }
+# We render 3D through the glow (OpenGL) backend's paint callback. eframe's
+# default backend in this workspace is wgpu; enabling `glow` here adds the GL
+# backend for this crate. Other apps keep wgpu — when both backends are present
+# eframe's default `Renderer` is still Wgpu, so only this app (which asks for
+# `Renderer::Glow` in main.rs) uses GL.
+eframe = { version = "0.35", features = ["glow"] }
+egui = "0.35"
+egui_glow = "0.35"
+rfd = "0.15"
+glam = "0.29"
+stl_io = "0.8"
+tobj = "4"
+threemf = "0.5"
+
+# ---------------------------------------------------------------------------
+# cargo-packager configuration (https://github.com/crabnebula-dev/cargo-packager)
+# Produces .dmg/.app (macOS), NSIS .exe (Windows), .deb/.AppImage (Linux),
+# registers the 3D-model file associations on every platform, and generates the
+# platform icons from icons/icon.png.
+# ---------------------------------------------------------------------------
+[package.metadata.packager]
+product-name = "Model Glazer"
+identifier = "com.model-glazer.app"
+before-packaging-command = "cargo build --release"
+icons = ["icons/icon.png"]
+out-dir = "dist"
+category = "Utility"
+authors = ["Ben Burwood"]
+publisher = "Ben Burwood"
+license-file = "LICENSE"
+homepage = "https://github.com/ben-burwood/window"
+
+[[package.metadata.packager.file-associations]]
+extensions = ["stl"]
+mime-type = "model/stl"
+description = "STL 3D Model"
+name = "STL Model"
+role = "viewer"
+
+[[package.metadata.packager.file-associations]]
+extensions = ["obj"]
+mime-type = "model/obj"
+description = "Wavefront OBJ 3D Model"
+name = "OBJ Model"
+role = "viewer"
+
+[[package.metadata.packager.file-associations]]
+extensions = ["3mf"]
+mime-type = "model/3mf"
+description = "3D Manufacturing Format Model"
+name = "3MF Model"
+role = "viewer"
+
+# --- Code signing (unsigned for now — fill in when certs are available) ------
+# [package.metadata.packager.macos]
+# signing-identity = "Developer ID Application: Your Name (TEAMID)"
+# [package.metadata.packager.macos.notarization]   # via env: APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID
+#
+# [package.metadata.packager.windows]
+# certificate-thumbprint = "..."
+# digest-algorithm = "sha256"
+# timestamp-url = "http://timestamp.digicert.com"

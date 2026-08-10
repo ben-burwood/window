@@ -45,6 +45,8 @@ jobs:
               - 'apps/image-shutter/**'
             drawing-paner:
               - 'apps/drawing-paner/**'
+            model-glazer:
+              - 'apps/model-glazer/**'
       - id: set
         env:
           SHARED: ${{ steps.f.outputs.shared }}
@@ -53,6 +55,7 @@ jobs:
           DV: ${{ steps.f.outputs.doc-viewer }}
           IS: ${{ steps.f.outputs.image-shutter }}
           DP: ${{ steps.f.outputs.drawing-paner }}
+          MG: ${{ steps.f.outputs.model-glazer }}
         run: |
           rust='[]'
           add() { rust=$(jq -c ". += [$1]" <<<"$rust"); }
@@ -63,6 +66,7 @@ jobs:
           if on "$DV"; then add '{"crate":"doc-viewer","deps":"webkit","web":"doc-viewer"}'; fi
           if on "$IS"; then add '{"crate":"image-shutter","deps":"egui","web":""}'; fi
           if on "$DP"; then add '{"crate":"drawing-paner","deps":"egui","web":""}'; fi
+          if on "$MG"; then add '{"crate":"model-glazer","deps":"egui","web":""}'; fi
           if [ "$SHARED" = "true" ]; then
             add '{"crate":"window-core","deps":"none","web":""}'
             add '{"crate":"window-tauri","deps":"webkit","web":""}'

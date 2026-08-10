@@ -14,6 +14,8 @@ use crate::dxf::{self, Bounds, Primitive};
 /// controls keep it there.
 const MIN_ZOOM: f32 = 1e-6;
 const MAX_ZOOM: f32 = 1e7;
+/// Multiplicative step for the discrete zoom controls (buttons / keys).
+const ZOOM_STEP: f32 = 1.25;
 /// Text below this on-screen height is skipped (unreadable), above it clamped.
 const MIN_TEXT_PX: f32 = 4.0;
 const MAX_TEXT_PX: f32 = 4000.0;
@@ -67,27 +69,29 @@ impl DrawingPanerApp {
 
     fn load(&mut self, path: &Path) {
         self.outdated.store(false, Ordering::Relaxed);
+        self.file_name = file_name(path);
+        self.title_dirty = true;
         match dxf::load(path) {
             Ok(drawing) => {
-                self.file_name = file_name(path);
                 self.drawing = Some(drawing);
                 self.error = None;
                 self.zoom = 1.0;
                 self.offset = Vec2::ZERO;
                 self.fit_pending = true;
-                self.title_dirty = true;
                 self.current_path = Some(path.to_path_buf());
                 self.start_watch(path);
             }
             Err(e) => {
                 self.error = Some(e);
                 self.drawing = None;
-                self.file_name = file_name(path);
-                self.title_dirty = true;
                 self.current_path = None;
                 self._watch = None;
             }
         }
+    }
+
+    fn zoom_by(&mut self, factor: f32) {
+        self.zoom = (self.zoom * factor).clamp(MIN_ZOOM, MAX_ZOOM);
     }
 
     fn start_watch(&mut self, path: &Path) {
@@ -182,7 +186,7 @@ impl eframe::App for DrawingPanerApp {
                                 self.fit_pending = true;
                             }
                             if ui.button("−").clicked() {
-                                self.zoom = (self.zoom / 1.25).clamp(MIN_ZOOM, MAX_ZOOM);
+                                self.zoom_by(1.0 / ZOOM_STEP);
                             }
                             if ui
                                 .button(format!("{:.0}%", self.zoom * 100.0))
@@ -192,7 +196,7 @@ impl eframe::App for DrawingPanerApp {
                                 self.fit_pending = true;
                             }
                             if ui.button("+").clicked() {
-                                self.zoom = (self.zoom * 1.25).clamp(MIN_ZOOM, MAX_ZOOM);
+                                self.zoom_by(ZOOM_STEP);
                             }
                         });
                     });
@@ -246,10 +250,10 @@ impl DrawingPanerApp {
                 self.fit_pending = true;
             }
             if zoom_in {
-                self.zoom = (self.zoom * 1.25).clamp(MIN_ZOOM, MAX_ZOOM);
+                self.zoom_by(ZOOM_STEP);
             }
             if zoom_out {
-                self.zoom = (self.zoom / 1.25).clamp(MIN_ZOOM, MAX_ZOOM);
+                self.zoom_by(1.0 / ZOOM_STEP);
             }
         }
     }
@@ -404,14 +408,5 @@ fn fit_zoom(bounds: &Bounds, panel: Vec2) -> f32 {
 
 /// True if the polyline's screen bounding box intersects the visible panel.
 fn polyline_visible(pts: &[Pos2], clip: Rect) -> bool {
-    if pts.len() < 2 {
-        return false;
-    }
-    let mut min = pts[0];
-    let mut max = pts[0];
-    for p in &pts[1..] {
-        min = min.min(*p);
-        max = max.max(*p);
-    }
-    clip.intersects(Rect::from_min_max(min, max))
+    pts.len() >= 2 && clip.intersects(Rect::from_points(pts))
 }

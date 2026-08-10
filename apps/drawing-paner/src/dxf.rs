@@ -219,12 +219,8 @@ struct Ctx<'a> {
 /// insert's color.
 fn resolve_color(e: &Entity, ctx: &Ctx, parent: Color) -> Color {
     let color = &e.common.color;
-    if let Some(idx) = color.index() {
-        if idx == 7 {
-            None
-        } else {
-            Some(palette::aci_rgb(idx))
-        }
+    if color.index().is_some() {
+        index_color(color)
     } else if color.is_by_block() {
         parent
     } else if color.is_by_layer() {
@@ -280,8 +276,7 @@ fn emit(e: &Entity, xf: Xf, parent: Color, ctx: &Ctx, out: &mut Vec<Primitive>, 
             let closed = p.flags & 1 != 0;
             let verts: Vec<(f64, f64, f64)> =
                 p.vertices.iter().map(|v| (v.x, v.y, v.bulge)).collect();
-            let pts = tessellate_bulged(&verts, closed);
-            push_poly(out, map_pts(&xf, &pts), closed, color);
+            push_bulged(out, &xf, &verts, closed, color);
         }
         EntityType::Polyline(p) => {
             let closed = p.flags & 1 != 0;
@@ -289,8 +284,7 @@ fn emit(e: &Entity, xf: Xf, parent: Color, ctx: &Ctx, out: &mut Vec<Primitive>, 
                 .vertices()
                 .map(|v| (v.location.x, v.location.y, v.bulge))
                 .collect();
-            let pts = tessellate_bulged(&verts, closed);
-            push_poly(out, map_pts(&xf, &pts), closed, color);
+            push_bulged(out, &xf, &verts, closed, color);
         }
         EntityType::Spline(s) => {
             // A viewer-grade approximation: connect the fit points if present,
@@ -306,27 +300,24 @@ fn emit(e: &Entity, xf: Xf, parent: Color, ctx: &Ctx, out: &mut Vec<Primitive>, 
             }
         }
         EntityType::Text(t) => {
-            if !t.value.trim().is_empty() {
-                out.push(Primitive::Text {
-                    pos: xf.apply(t.location.x, t.location.y),
-                    height: t.text_height * xf.avg_scale(),
-                    angle_deg: t.rotation + xf.rotation_deg(),
-                    content: t.value.clone(),
-                    color,
-                });
-            }
+            push_text(
+                out,
+                xf.apply(t.location.x, t.location.y),
+                t.text_height * xf.avg_scale(),
+                t.rotation + xf.rotation_deg(),
+                t.value.clone(),
+                color,
+            );
         }
         EntityType::MText(t) => {
-            let content = mtext_plain(&t.text);
-            if !content.trim().is_empty() {
-                out.push(Primitive::Text {
-                    pos: xf.apply(t.insertion_point.x, t.insertion_point.y),
-                    height: t.initial_text_height * xf.avg_scale(),
-                    angle_deg: t.rotation_angle + xf.rotation_deg(),
-                    content,
-                    color,
-                });
-            }
+            push_text(
+                out,
+                xf.apply(t.insertion_point.x, t.insertion_point.y),
+                t.initial_text_height * xf.avg_scale(),
+                t.rotation_angle + xf.rotation_deg(),
+                mtext_plain(&t.text),
+                color,
+            );
         }
         EntityType::Insert(ins) => {
             if depth >= MAX_BLOCK_DEPTH {
@@ -353,6 +344,38 @@ fn emit(e: &Entity, xf: Xf, parent: Color, ctx: &Ctx, out: &mut Vec<Primitive>, 
 fn push_poly(out: &mut Vec<Primitive>, pts: Vec<[f64; 2]>, closed: bool, color: Color) {
     if pts.len() >= 2 {
         out.push(Primitive::Polyline { pts, closed, color });
+    }
+}
+
+/// Tessellate a bulge vertex list, map it through `xf`, and push the polyline.
+fn push_bulged(
+    out: &mut Vec<Primitive>,
+    xf: &Xf,
+    verts: &[(f64, f64, f64)],
+    closed: bool,
+    color: Color,
+) {
+    let pts = tessellate_bulged(verts, closed);
+    push_poly(out, map_pts(xf, &pts), closed, color);
+}
+
+/// Push a text primitive, skipping blank content.
+fn push_text(
+    out: &mut Vec<Primitive>,
+    pos: [f64; 2],
+    height: f64,
+    angle_deg: f64,
+    content: String,
+    color: Color,
+) {
+    if !content.trim().is_empty() {
+        out.push(Primitive::Text {
+            pos,
+            height,
+            angle_deg,
+            content,
+            color,
+        });
     }
 }
 
