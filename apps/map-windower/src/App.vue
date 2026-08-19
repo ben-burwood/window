@@ -10,6 +10,8 @@ import {
   useTheme,
 } from "@window/ui";
 import MapView from "./components/MapView.vue";
+import OverviewPanel from "./components/OverviewPanel.vue";
+import { buildOverview, type OverviewNode } from "./overview";
 import { toFeatureCollection, fileKind, type LoadedSource } from "./types";
 import {
   getStartupFile,
@@ -28,7 +30,13 @@ const error = ref<string | null>(null);
 const loading = ref(false);
 const dragging = ref(false);
 const outdated = ref(false);
+const showOverview = ref(false);
 const unlisteners: Array<() => void> = [];
+
+const overviewAvailable = computed(() => loaded.value?.kind === "geojson");
+const overviewRoot = computed<OverviewNode | null>(() =>
+  loaded.value?.kind === "geojson" ? buildOverview(loaded.value.data) : null,
+);
 
 const mapView = ref<InstanceType<typeof MapView> | null>(null);
 const { open: menuOpen, x: menuX, y: menuY, openMenu, close: closeMenu } = useContextMenu();
@@ -154,18 +162,27 @@ onUnmounted(() => unlisteners.forEach((u) => u()));
         <span v-if="layerNames.length" class="layer-names">{{ layerNames.join(", ") }}</span>
       </template>
       <template #end>
+        <ToolbarButton
+          v-if="overviewAvailable"
+          :active="showOverview"
+          title="Toggle GeoJSON structure"
+          @click="showOverview = !showOverview"
+          >Overview</ToolbarButton
+        >
         <ToolbarButton variant="primary" @click="chooseFile">Open File</ToolbarButton>
       </template>
     </Toolbar>
 
     <main class="content">
-      <MapView
-        v-if="loaded"
-        ref="mapView"
-        :source="loaded"
-        @error="onMapError"
-        @layers="onLayers"
-      />
+      <template v-if="loaded">
+        <MapView ref="mapView" :source="loaded" @error="onMapError" @layers="onLayers" />
+
+        <OverviewPanel
+          v-if="showOverview && overviewRoot"
+          :root="overviewRoot"
+          @close="showOverview = false"
+        />
+      </template>
 
       <EmptyState
         v-else
