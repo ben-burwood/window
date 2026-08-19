@@ -28,14 +28,13 @@ const dragging = ref(false);
 const outdated = ref(false);
 const unlisteners: Array<() => void> = [];
 
-// Right-click context menu with a light/dark theme toggle.
+// Right-click context menu with a light/dark Theme Toggle
 const { open: menuOpen, x: menuX, y: menuY, openMenu, close: closeMenu } = useContextMenu();
 const { menuItem: themeItem, handleSelect: onMenuSelect } = useTheme();
 const menuItems = computed(() => [themeItem.value]);
 
 const viewer = ref<InstanceType<typeof PdfView> | null>(null);
 
-// Display state pushed up from the viewer, rendered in the top bar.
 const st = ref<ViewerState>({
   currentPage: 1,
   totalPages: 0,
@@ -44,7 +43,7 @@ const st = ref<ViewerState>({
   findCount: 0,
 });
 
-// Local editable copy of the page number so typing doesn't fight the viewer.
+// Local editable copy of the page number so typing doesn't fight the viewer
 const pageInput = ref("1");
 watch(
   () => st.value.currentPage,
@@ -74,10 +73,9 @@ async function loadFileByPath(path: string, isRescan = false) {
   error.value = null;
   try {
     const name = basename(path);
-    // The viewer reads the PDF directly via the asset:// protocol, so the bytes
-    // never cross the IPC boundary.
+    // The viewer reads the PDF directly via the asset:// protocol, so the bytes never cross the IPC boundary
     let url = convertFileSrc(path);
-    // A rescan reopens the same path, so bust the cache to fetch the changed bytes.
+    // A rescan reopens the same path, so bust the cache to fetch the changed bytes
     if (isRescan) url += (url.includes("?") ? "&" : "?") + "reload=" + ++reloadNonce;
     loaded.value = { name, url };
     await watchFile(path);
@@ -120,12 +118,26 @@ async function chooseFile() {
   await openPath(path);
 }
 
-// Ctrl/Cmd+F focuses the find box (the classic find shortcut).
+// Keyboard Shortcuts
 function onKeydown(e: KeyboardEvent) {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f" && loaded.value) {
+  if (!loaded.value) return;
+
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
     e.preventDefault();
     findInput.value?.focus();
     findInput.value?.select();
+    return;
+  }
+
+  // Don't hijack arrows while typing in the page/find inputs, or with modifiers.
+  if (e.target instanceof HTMLInputElement || e.ctrlKey || e.metaKey || e.altKey) return;
+
+  if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    viewer.value?.prev();
+  } else if (e.key === "ArrowRight") {
+    e.preventDefault();
+    viewer.value?.next();
   }
 }
 
@@ -134,8 +146,8 @@ onMounted(async () => {
 
   // OS file drops are delivered by the webview (HTML5 drop events don't carry a
   // real filesystem path under Tauri), so we listen for the native drag-drop.
-  // onOpenFile covers macOS runtime file-opens. Subscribe before pulling the
-  // startup file so nothing is missed; everything funnels through openPath.
+  // onOpenFile covers macOS runtime file-opens.
+  // Subscribe before pulling the startup file so nothing is missed; everything funnels through openPath.
   const un1 = await onFileDrop(handleDrop, (hovering) => (dragging.value = hovering));
   const un2 = await onOpenFile(openPath);
   const un3 = await onFileChanged(() => {
