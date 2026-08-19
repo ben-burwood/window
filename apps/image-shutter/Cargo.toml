@@ -37,7 +37,7 @@ out-dir = "dist"
 category = "Utility"
 authors = ["Ben Burwood"]
 publisher = "Ben Burwood"
-license-file = "LICENSE"
+license-file = "../../LICENSE"
 homepage = "https://github.com/ben-burwood/window"
 
 [[package.metadata.packager.file-associations]]
