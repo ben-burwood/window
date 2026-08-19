@@ -29,6 +29,7 @@ export interface FilterSpec {
   op: string;
   value: string;
   value2: string;
+  caseSensitive?: boolean; // string filters only; default false = case-insensitive
 }
 
 export interface RowsResponse {

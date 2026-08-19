@@ -4,13 +4,13 @@ A monorepo for six small desktop file-viewer applications that share a framework
 
 **One repo, one lockfile, one toolchain, six independently-built binaries.**
 
-| App             | Format        | Stack                                  |
-| --------------- | ------------- | -------------------------------------- |
-| `data-framer`   | CSV / Parquet | Tauri v2 + Vue 3 (Polars)              |
-| `map-windower`  | GeoJSON       | Tauri v2 + Vue 3 (MapLibre)            |
-| `doc-viewer`    | PDF           | Tauri v2 + Vue 3 (PDF.js)              |
-| `image-shutter` | SVG           | egui / eframe + resvg (cargo-packager) |
-| `drawing-paner` | DXF           | egui / eframe + dxf (cargo-packager)   |
+| App             | Format        | Stack                                    |
+| --------------- | ------------- | ---------------------------------------- |
+| `data-framer`   | CSV / Parquet | Tauri v2 + Vue 3 (Polars)                |
+| `map-windower`  | GeoJSON       | Tauri v2 + Vue 3 (MapLibre)              |
+| `doc-viewer`    | PDF           | Tauri v2 + Vue 3 (PDF.js)                |
+| `image-shutter` | SVG           | egui / eframe + resvg (cargo-packager)   |
+| `drawing-paner` | DXF           | egui / eframe + dxf (cargo-packager)     |
 | `model-glazer`  | STL/OBJ/3MF   | egui / eframe + glow 3D (cargo-packager) |
 
 ## Layout

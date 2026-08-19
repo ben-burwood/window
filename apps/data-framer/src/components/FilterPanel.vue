@@ -24,6 +24,7 @@ interface OpDef {
   op: FilterOp;
   hasValue: boolean;
   hasTwoValues: boolean;
+  caseable?: boolean; // string ops that honor the case-sensitivity toggle
 }
 
 const props = defineProps<{ columns: ColumnInfo[] }>();
@@ -64,12 +65,24 @@ const DATE_OPS: OpDef[] = [
 
 const OPS_BY_DTYPE: Record<Dtype, OpDef[]> = {
   string: [
-    { label: "equals", op: "eq", hasValue: true, hasTwoValues: false },
-    { label: "not equals", op: "neq", hasValue: true, hasTwoValues: false },
-    { label: "contains", op: "contains", hasValue: true, hasTwoValues: false },
-    { label: "not contains", op: "not_contains", hasValue: true, hasTwoValues: false },
-    { label: "starts with", op: "starts_with", hasValue: true, hasTwoValues: false },
-    { label: "ends with", op: "ends_with", hasValue: true, hasTwoValues: false },
+    { label: "equals", op: "eq", hasValue: true, hasTwoValues: false, caseable: true },
+    { label: "not equals", op: "neq", hasValue: true, hasTwoValues: false, caseable: true },
+    { label: "contains", op: "contains", hasValue: true, hasTwoValues: false, caseable: true },
+    {
+      label: "not contains",
+      op: "not_contains",
+      hasValue: true,
+      hasTwoValues: false,
+      caseable: true,
+    },
+    {
+      label: "starts with",
+      op: "starts_with",
+      hasValue: true,
+      hasTwoValues: false,
+      caseable: true,
+    },
+    { label: "ends with", op: "ends_with", hasValue: true, hasTwoValues: false, caseable: true },
     ...NULL_OPS,
   ],
   integer: NUMERIC_OPS,
@@ -107,6 +120,10 @@ function currentOpDef(f: FilterSpec): OpDef | undefined {
   return opDefsForFilter(f).find((d) => d.op === f.op);
 }
 
+function showCaseToggle(f: FilterSpec): boolean {
+  return currentOpDef(f)?.caseable ?? false;
+}
+
 function onColumnChange(f: FilterSpec) {
   const defs = opDefsForFilter(f);
   if (defs.length > 0) {
@@ -140,6 +157,7 @@ function addFilter() {
     op: OPS_BY_DTYPE[firstCol.dtype][0].op,
     value: "",
     value2: "",
+    caseSensitive: false,
   });
 }
 
@@ -215,6 +233,10 @@ function clearFilters() {
         class="filter-value"
         placeholder="to"
       />
+      <label v-if="showCaseToggle(f)" class="case-toggle" title="Match case (case-sensitive)">
+        <input type="checkbox" v-model="f.caseSensitive" />
+        <span>Aa</span>
+      </label>
       <button class="remove-btn" @click="removeFilter(i)" title="Remove filter">×</button>
     </div>
     <div class="panel-actions">
@@ -269,6 +291,22 @@ function clearFilters() {
   color: var(--ag-foreground-color, #181d1f);
   background: var(--ag-background-color, #fff);
   width: 160px;
+}
+
+.case-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-family: var(--ag-font-family, inherit);
+  color: var(--ag-foreground-color, #181d1f);
+  cursor: pointer;
+  user-select: none;
+}
+
+.case-toggle input {
+  cursor: pointer;
+  margin: 0;
 }
 
 .remove-btn {

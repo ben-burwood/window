@@ -267,6 +267,8 @@ pub struct FilterSpec {
     pub op: String,
     pub value: Option<String>,
     pub value2: Option<String>,
+    #[serde(rename = "caseSensitive", default)]
+    pub case_sensitive: Option<bool>,
 }
 
 /// AND-combine all filters and apply them to the LazyFrame.
@@ -311,7 +313,23 @@ fn build_filter_expr(spec: &FilterSpec, dtype: &str) -> Result<Expr, String> {
 
     let v = spec.value.as_deref().ok_or("Missing filter value")?;
 
+    // Case-insensitive is the default; only opt-in makes matching case-sensitive.
+    let is_string = dtype == "string";
+    let fold = is_string && !spec.case_sensitive.unwrap_or(false);
+    let str_col = if fold {
+        col(c).str().to_lowercase()
+    } else {
+        col(c)
+    };
+    let needle = if fold {
+        v.to_lowercase()
+    } else {
+        v.to_string()
+    };
+
     match spec.op.as_str() {
+        "eq" if is_string => Ok(str_col.eq(lit(needle))),
+        "neq" if is_string => Ok(str_col.neq(lit(needle))),
         "eq" => Ok(col(c).eq(parse_value(v, dtype)?)),
         "neq" => Ok(col(c).neq(parse_value(v, dtype)?)),
         "gt" => Ok(col(c).gt(parse_value(v, dtype)?)),
@@ -327,10 +345,10 @@ fn build_filter_expr(spec: &FilterSpec, dtype: &str) -> Result<Expr, String> {
                 .gt_eq(parse_value(v, dtype)?)
                 .and(col(c).lt_eq(parse_value(v2, dtype)?)))
         }
-        "contains" => Ok(col(c).str().contains_literal(lit(v))),
-        "not_contains" => Ok(col(c).str().contains_literal(lit(v)).not()),
-        "starts_with" => Ok(col(c).str().starts_with(lit(v))),
-        "ends_with" => Ok(col(c).str().ends_with(lit(v))),
+        "contains" => Ok(str_col.str().contains_literal(lit(needle))),
+        "not_contains" => Ok(str_col.str().contains_literal(lit(needle)).not()),
+        "starts_with" => Ok(str_col.str().starts_with(lit(needle))),
+        "ends_with" => Ok(str_col.str().ends_with(lit(needle))),
         other => Err(format!("Unknown filter op: {other}")),
     }
 }
