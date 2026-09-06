@@ -1,0 +1,48 @@
+name: Publish to WinGet
+
+on:
+  workflow_run:
+    workflows: ["Publish"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Release Tag"
+        required: true
+
+jobs:
+  winget:
+    runs-on: windows-latest
+    # Manual runs always proceed. Automatic runs only after Publish succeeds
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: data-framer
+            id: BenBurwood.DataFramer
+          - app: map-windower
+            id: BenBurwood.MapWindower
+          - app: doc-viewer
+            id: BenBurwood.DocViewer
+          - app: image-shutter
+            id: BenBurwood.ImageShutter
+          - app: drawing-paner
+            id: BenBurwood.DrawingPaner
+          - app: model-glazer
+            id: BenBurwood.ModelGlazer
+    steps:
+      - name: Publish ${{ matrix.app }} update to WinGet
+        shell: pwsh
+        run: |
+          $tag = "${{ inputs.release || github.event.workflow_run.head_branch }}"   # e.g. v0.1.2
+          $version = $tag -replace '^v', ''                                         # e.g. 0.1.2
+
+          $installerUrl = "https://github.com/ben-burwood/window/releases/download/$tag/${{ matrix.app }}_${version}_x64-setup.exe"
+
+          Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+          .\wingetcreate.exe update ${{ matrix.id }} `
+            --version $version `
+            --urls "$installerUrl" `
+            --submit `
+            --token "${{ secrets.WINGET_TOKEN }}"

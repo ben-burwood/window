@@ -1,10 +1,7 @@
 name: Release (Tauri apps)
 
 on:
-  push:
-    tags: ["v*"]
   workflow_call:
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -53,22 +50,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Updater signing (optional; deferred feature — secrets may be unset for now).
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          # Apple code-signing / notarization
-          # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          # APPLE_ID: ${{ secrets.APPLE_ID }}
-          # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
+          releaseId: ${{ github.event.release.id }}
           projectPath: apps/${{ matrix.app }}
-          # Merge the shared base config (publisher/category/targets/build commands) via an
-          # absolute path so it resolves regardless of the CLI's working directory.
           args: ${{ matrix.args }} --config ${{ github.workspace }}/tauri.base.json
-          tagName: ${{ github.ref_name }}
-          releaseName: "Window ${{ github.ref_name }}"
-          releaseDraft: true
-          prerelease: false
