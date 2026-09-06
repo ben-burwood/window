@@ -1,10 +1,5 @@
 name: WinGet New (first submission)
 
-# One-time "new" submission for packages that are not yet in winget-pkgs.
-# `wingetcreate update` (winget.yml) only works once a package already exists, so brand-new
-# packages must be bootstrapped here first. After the first version merges into winget-pkgs,
-# winget.yml keeps them updated automatically on every release.
-
 on:
   workflow_dispatch:
     inputs:
@@ -14,7 +9,6 @@ on:
       apps:
         description: "Space/comma-separated app names to submit"
         required: false
-        default: "doc-viewer map-windower image-shutter drawing-paner model-glazer"
       dry_run:
         description: "Generate + validate only, do not open PRs"
         type: boolean
