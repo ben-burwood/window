@@ -1,0 +1,6 @@
+# Statically link the MSVC C runtime on Windows so the shipped .exe is fully
+# self-contained. Without this, the binary dynamically links vcruntime140.dll /
+# msvcp140.dll and fails on a clean machine (and in winget's validation VM) with
+# STATUS_DLL_NOT_FOUND (0xC0000135) unless Microsoft.VCRedist.2015+ is present.
+[target.'cfg(target_os = "windows")']
+rustflags = ["-C", "target-feature=+crt-static"]
