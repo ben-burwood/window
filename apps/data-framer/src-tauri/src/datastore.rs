@@ -1,3 +1,4 @@
+use h3o::CellIndex;
 use polars::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
@@ -530,23 +531,41 @@ pub fn get_h3_features(
         .map_err(|e| e.to_string())?;
 
     let idx = row_idx(&df)?;
-    let cells = df
-        .column(h3_col)
-        .map_err(|e| e.to_string())?
-        .cast(&DataType::String)
-        .map_err(|e| e.to_string())?;
-    let cells = cells.str().map_err(|e| e.to_string())?;
+    let column = df.column(h3_col).map_err(|e| e.to_string())?;
 
-    let mut out = Vec::with_capacity(df.height());
-    for (row, cell) in idx.into_iter().zip(cells.into_iter()) {
-        if let (Some(row), Some(cell)) = (row, cell) {
-            out.push(H3Feature {
-                cell: cell.to_string(),
-                idx: row,
-            });
-        }
+    // H3 Cells may be stored either as:
+    // - hex string (e.g. "89283082807ffff")
+    // - raw 64-bit integer (e.g. 617700169958293503)
+    //
+    // h3o::CellIndex is used to ensure hex representation for the frontend
+    let cells: Vec<Option<H3Feature>> = if column.dtype().is_integer() {
+        let ints = column.cast(&DataType::UInt64).map_err(|e| e.to_string())?;
+        let ints = ints.u64().map_err(|e| e.to_string())?;
+        idx.into_iter()
+            .zip(ints.into_iter())
+            .map(|(row, v)| h3_feature(row, v.and_then(|v| CellIndex::try_from(v).ok())))
+            .collect()
+    } else {
+        let strs = column.cast(&DataType::String).map_err(|e| e.to_string())?;
+        let strs = strs.str().map_err(|e| e.to_string())?;
+        idx.into_iter()
+            .zip(strs.into_iter())
+            .map(|(row, v)| h3_feature(row, v.and_then(|v| v.parse::<CellIndex>().ok())))
+            .collect()
+    };
+
+    Ok(cells.into_iter().flatten().collect())
+}
+
+/// Build an [`H3Feature`] from a row index and a validated cell, dropping the row when either is absent.
+fn h3_feature(row: Option<IdxSize>, cell: Option<CellIndex>) -> Option<H3Feature> {
+    match (row, cell) {
+        (Some(idx), Some(cell)) => Some(H3Feature {
+            cell: cell.to_string(),
+            idx,
+        }),
+        _ => None,
     }
-    Ok(out)
 }
 
 /// Decode the (filtered) WKB geometry column into GeoJSON geometries, each tagged

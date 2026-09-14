@@ -42,3 +42,5 @@ polars = { version = "0.53", features = [
   "regex",
 ] }
 chrono = "0.4"
+# H3 Cell validation/normalisation
+h3o = "0.11"
