@@ -169,6 +169,7 @@ watch(
       :columnDefs="columnDefs"
       :defaultColDef="defaultColDef"
       rowModelType="infinite"
+      :suppressColumnVirtualisation="true"
       :cacheBlockSize="200"
       :maxBlocksInCache="20"
       :infiniteInitialRowCount="1"
