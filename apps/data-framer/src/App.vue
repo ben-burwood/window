@@ -22,6 +22,7 @@ import {
   onOpenFile,
   watchFile,
   onFileChanged,
+  onLossyUtf8,
 } from "./bridge";
 import FilterPanel from "./components/FilterPanel.vue";
 import SelectPanel from "./components/SelectPanel.vue";
@@ -208,7 +209,10 @@ onMounted(async () => {
   const un3 = await onFileChanged(() => {
     outdated.value = true;
   });
-  unlisteners.push(un1, un2, un3);
+  const un4 = await onLossyUtf8((path) => {
+    if (fileInfo.value?.path === path) fileInfo.value.lossy_utf8 = true;
+  });
+  unlisteners.push(un1, un2, un3, un4);
 
   const startup = await getStartupFile();
   if (startup) await openPath(startup);
@@ -278,6 +282,12 @@ function onColumnsReset() {
           title="File changed on disk — click to reload"
           @click="rescan"
           >outdated</Badge
+        >
+        <Badge
+          v-if="fileInfo!.lossy_utf8"
+          variant="warning"
+          title="Contains invalid UTF-8 : bad bytes shown as �"
+          >lossy utf-8</Badge
         >
         <span class="row-count">
           <template v-if="activeFilters.length > 0">

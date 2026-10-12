@@ -22,6 +22,7 @@ export interface FileInfo {
   path: string;
   total_rows: number;
   columns: ColumnInfo[];
+  lossy_utf8: boolean;
 }
 
 export interface FilterSpec {

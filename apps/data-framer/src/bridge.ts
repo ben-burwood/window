@@ -1,4 +1,5 @@
 // data-framer's typed IPC wrappers. Components import from here, never call invoke directly.
+import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@window/bridge";
 import type { FileInfo, FilterSpec, RowsResponse } from "./types";
 
@@ -103,4 +104,9 @@ export type ExportFileArgs = {
 };
 export function exportFile(args: ExportFileArgs) {
   return invoke<void>("export_file", args);
+}
+
+/** Subscribe to "a query hit invalid UTF-8; the file is now read lossily" (payload: file path). */
+export function onLossyUtf8(onLossy: (path: string) => void): Promise<() => void> {
+  return listen<string>("lossy-utf8", (event) => onLossy(event.payload));
 }

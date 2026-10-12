@@ -14,9 +14,9 @@ pub struct ColumnInfo {
 }
 
 /// Persisted across `get_rows` calls so we don't re-read the file header each time.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LoadedFile {
-    pub path: String,
+    pub source: Source,
     pub total_rows: usize,
     pub schema: Vec<ColumnInfo>,
 }
@@ -26,28 +26,14 @@ pub struct AppState {
     pub file: Mutex<Option<LoadedFile>>,
 }
 
-impl AppState {
-    /// Path and schema of the currently loaded file, erroring if none is open.
-    /// Cloned out so the lock isn't held across the subsequent file scan/collect.
-    pub fn loaded(&self) -> Result<(String, Vec<ColumnInfo>), String> {
-        let guard = self.file.lock().unwrap();
-        let f = guard.as_ref().ok_or("No file loaded")?;
-        Ok((f.path.clone(), f.schema.clone()))
-    }
-
-    /// Path of the currently loaded file, erroring if none is open.
-    pub fn loaded_path(&self) -> Result<String, String> {
-        let guard = self.file.lock().unwrap();
-        Ok(guard.as_ref().ok_or("No file loaded")?.path.clone())
-    }
-}
-
 /// Returned by `load_file` command.
 #[derive(Debug, Serialize)]
 pub struct FileInfo {
     pub path: String,
     pub total_rows: usize,
     pub columns: Vec<ColumnInfo>,
+    /// CSV contained invalid UTF-8 and is being read with lossy decoding.
+    pub lossy_utf8: bool,
 }
 
 /// Returned by `get_rows` command.
@@ -90,15 +76,66 @@ pub const ROW_IDX: &str = "__row_idx";
 // File scanning
 // ---------------------------------------------------------------------------
 
-/// Build a LazyFrame from a file path. Supports .parquet and .csv.
-pub fn scan_file(path: &str) -> Result<LazyFrame, String> {
-    match window_core::extension_lower(path).as_deref().unwrap_or("") {
-        "parquet" => LazyFrame::scan_parquet(path.into(), ScanArgsParquet::default())
-            .map_err(|e| e.to_string()),
-        "csv" => LazyCsvReader::new(path.into())
-            .finish()
-            .map_err(|e| e.to_string()),
-        other => Err(format!("Unsupported file format: .{other}")),
+/// A file to scan, plus how to decode it.
+#[derive(Debug, Clone)]
+pub struct Source {
+    pub path: String,
+    /// Decode CSV text with `LossyUtf8` (invalid bytes → U+FFFD)
+    pub lossy_utf8: bool,
+}
+
+impl Source {
+    pub fn new(path: &str) -> Self {
+        Self {
+            path: path.to_string(),
+            lossy_utf8: false,
+        }
+    }
+
+    /// Build a LazyFrame for this source. Supports .parquet and .csv.
+    pub fn scan(&self) -> Result<LazyFrame, String> {
+        let path = self.path.as_str();
+        match window_core::extension_lower(path).as_deref().unwrap_or("") {
+            "parquet" => LazyFrame::scan_parquet(path.into(), ScanArgsParquet::default())
+                .map_err(|e| e.to_string()),
+            "csv" => {
+                let encoding = if self.lossy_utf8 {
+                    CsvEncoding::LossyUtf8
+                } else {
+                    CsvEncoding::Utf8
+                };
+                LazyCsvReader::new(path.into())
+                    .with_encoding(encoding)
+                    .finish()
+                    .map_err(|e| e.to_string())
+            }
+            other => Err(format!("Unsupported file format: .{other}")),
+        }
+    }
+}
+
+/// Whether a stringified polars error is a strict-UTF-8 decode failure, i.e.
+/// worth retrying with `lossy_utf8` on.
+///
+/// Polars only validates the bytes a query actually parses, so a strict read
+/// can succeed for one viewport and fail for another — hence retrying per query
+/// rather than checking once at load.
+pub fn is_utf8_error(e: &str) -> bool {
+    e.to_ascii_lowercase().contains("invalid utf-8")
+}
+
+/// Run `f` against `source`; if it fails on invalid UTF-8, switch `source` to
+/// lossy decoding and retry once.
+pub fn with_utf8_fallback<T>(
+    source: &mut Source,
+    f: impl Fn(&Source) -> Result<T, String>,
+) -> Result<T, String> {
+    match f(source) {
+        Err(e) if !source.lossy_utf8 && is_utf8_error(&e) => {
+            source.lossy_utf8 = true;
+            f(source)
+        }
+        r => r,
     }
 }
 
@@ -431,7 +468,7 @@ fn parse_value(v: &str, dtype: &str) -> Result<Expr, String> {
 // ---------------------------------------------------------------------------
 
 pub fn get_chart_rows(
-    path: &str,
+    src: &Source,
     x_col: &str,
     y_cols: &[String],
     filters: &[FilterSpec],
@@ -440,7 +477,7 @@ pub fn get_chart_rows(
     let cols: Vec<String> = std::iter::once(x_col.to_string())
         .chain(y_cols.iter().cloned())
         .collect();
-    let lf = build_pipeline(path, filters, schema, Some(x_col), false, &cols)?;
+    let lf = build_pipeline(src, filters, schema, Some(x_col), false, &cols)?;
     let df = lf.collect().map_err(|e| e.to_string())?;
     Ok(frame_to_rows(&df))
 }
@@ -452,11 +489,11 @@ pub fn get_chart_rows(
 /// Shared prefix for the three map-feature queries: scan the file, tag every row
 /// with its absolute pre-filter index (`ROW_IDX`), then apply the active filters.
 fn map_scan(
-    path: &str,
+    src: &Source,
     filters: &[FilterSpec],
     schema: &[ColumnInfo],
 ) -> Result<LazyFrame, String> {
-    let lf = scan_file(path)?.with_row_index(ROW_IDX, None);
+    let lf = src.scan()?.with_row_index(ROW_IDX, None);
     apply_filters(lf, filters, schema)
 }
 
@@ -471,14 +508,14 @@ fn row_idx(df: &DataFrame) -> Result<&IdxCa, String> {
 /// (`[min_lat, max_lat, min_lon, max_lon]`) is given, only points inside it are
 /// returned. Rows with a null coordinate are dropped.
 pub fn get_map_features(
-    path: &str,
+    src: &Source,
     lat_col: &str,
     lon_col: &str,
     filters: &[FilterSpec],
     schema: &[ColumnInfo],
     bbox: Option<[f64; 4]>,
 ) -> Result<Vec<MapPoint>, String> {
-    let mut lf = map_scan(path, filters, schema)?;
+    let mut lf = map_scan(src, filters, schema)?;
     if let Some([min_lat, max_lat, min_lon, max_lon]) = bbox {
         lf = lf.filter(
             col(lat_col)
@@ -520,12 +557,12 @@ pub fn get_map_features(
 /// Filtered H3 cell features, each tagged with its source row index. Rows with a
 /// null cell value are dropped.
 pub fn get_h3_features(
-    path: &str,
+    src: &Source,
     h3_col: &str,
     filters: &[FilterSpec],
     schema: &[ColumnInfo],
 ) -> Result<Vec<H3Feature>, String> {
-    let df = map_scan(path, filters, schema)?
+    let df = map_scan(src, filters, schema)?
         .select([col(ROW_IDX), col(h3_col)])
         .collect()
         .map_err(|e| e.to_string())?;
@@ -573,12 +610,12 @@ fn h3_feature(row: Option<IdxSize>, cell: Option<CellIndex>) -> Option<H3Feature
 /// bad blob can't blank the whole map. Coordinates are emitted verbatim
 /// (GeoParquet geometry is stored lon/lat, which is also GeoJSON order).
 pub fn get_geometry_features(
-    path: &str,
+    src: &Source,
     geom_col: &str,
     filters: &[FilterSpec],
     schema: &[ColumnInfo],
 ) -> Result<Vec<GeomFeature>, String> {
-    let df = map_scan(path, filters, schema)?
+    let df = map_scan(src, filters, schema)?
         .select([col(ROW_IDX), col(geom_col)])
         .collect()
         .map_err(|e| e.to_string())?;
@@ -607,8 +644,9 @@ pub fn get_geometry_features(
 /// Fetch a single source row by its absolute file position, as a JSON object.
 /// Uses a positional slice so parquet readers can skip untouched row groups
 /// instead of scanning the whole file per popup.
-pub fn get_row_at(path: &str, index: i64) -> Result<serde_json::Value, String> {
-    let df = scan_file(path)?
+pub fn get_row_at(src: &Source, index: i64) -> Result<serde_json::Value, String> {
+    let df = src
+        .scan()?
         .slice(index, 1)
         .collect()
         .map_err(|e| e.to_string())?;
@@ -632,14 +670,14 @@ fn wkb_to_geojson(bytes: &[u8]) -> Result<serde_json::Value, String> {
 /// Build a ready-to-collect LazyFrame from the common query parameters shared
 /// by `get_rows` and `export_file`: scan → filter → sort → column projection.
 pub fn build_pipeline(
-    path: &str,
+    src: &Source,
     filters: &[FilterSpec],
     schema: &[ColumnInfo],
     sort_col: Option<&str>,
     sort_desc: bool,
     columns: &[String],
 ) -> Result<LazyFrame, String> {
-    let lf = scan_file(path)?;
+    let lf = src.scan()?;
     let lf = apply_filters(lf, filters, schema)?;
     let lf = match sort_col {
         Some(c) => lf.sort(
@@ -704,7 +742,7 @@ mod tests {
         let path_str = path.to_str().unwrap();
         write_file(&mut df, path_str).unwrap();
 
-        let mut lf = scan_file(path_str).unwrap();
+        let mut lf = Source::new(path_str).scan().unwrap();
         let schema = extract_schema(&mut lf).unwrap();
         let dtypes: std::collections::HashMap<_, _> = schema
             .iter()
@@ -717,6 +755,39 @@ mod tests {
         let rows = frame_to_rows(&out);
         assert_eq!(rows[0]["st"], serde_json::json!({ "a": 1, "b": "x" }));
         assert_eq!(rows[0]["xs"][0], serde_json::json!(1));
+
+        std::fs::remove_file(path).ok();
+    }
+
+    /// A Latin-1 byte deep in a CSV doesn't affect queries that never parse it;
+    /// one that does is retried with lossy decoding (byte → U+FFFD).
+    #[test]
+    fn invalid_utf8_csv_falls_back_to_lossy() {
+        let path = std::env::temp_dir().join("data_framer_lossy_test.csv");
+        let mut bytes = b"name\n".to_vec();
+        for i in 0..100_000 {
+            bytes.extend_from_slice(format!("row{i}\n").as_bytes());
+        }
+        bytes.extend_from_slice(b"caf\xe9\n");
+        std::fs::write(&path, &bytes).unwrap();
+        let mut src = Source::new(path.to_str().unwrap());
+        let collect = |s: &Source| s.scan()?.collect().map_err(|e| e.to_string());
+
+        // Pins polars' error wording: if it changes, the fallback silently stops firing.
+        assert!(is_utf8_error(&collect(&src).unwrap_err()));
+
+        with_utf8_fallback(&mut src, |s| {
+            s.scan()?.slice(0, 10).collect().map_err(|e| e.to_string())
+        })
+        .unwrap();
+        assert!(!src.lossy_utf8);
+
+        let df = with_utf8_fallback(&mut src, collect).unwrap();
+        assert!(src.lossy_utf8);
+        assert_eq!(
+            frame_to_rows(&df.tail(Some(1)))[0]["name"],
+            serde_json::json!("caf\u{FFFD}")
+        );
 
         std::fs::remove_file(path).ok();
     }
