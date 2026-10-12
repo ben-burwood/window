@@ -89,10 +89,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Install Vite+ (vp)
-        run: |
-          curl -fsSL https://vite.plus | bash
-          echo "$HOME/.vite-plus/bin" >> "$GITHUB_PATH"
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          run-install: false # deps already installed by npm ci
+          node-manager: false # keep the Node from setup-node
       - run: vp fmt --check
 
   rust:
