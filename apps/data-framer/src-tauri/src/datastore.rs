@@ -579,14 +579,14 @@ pub fn get_h3_features(
         let ints = column.cast(&DataType::UInt64).map_err(|e| e.to_string())?;
         let ints = ints.u64().map_err(|e| e.to_string())?;
         idx.into_iter()
-            .zip(ints.into_iter())
+            .zip(ints)
             .map(|(row, v)| h3_feature(row, v.and_then(|v| CellIndex::try_from(v).ok())))
             .collect()
     } else {
         let strs = column.cast(&DataType::String).map_err(|e| e.to_string())?;
         let strs = strs.str().map_err(|e| e.to_string())?;
         idx.into_iter()
-            .zip(strs.into_iter())
+            .zip(strs)
             .map(|(row, v)| h3_feature(row, v.and_then(|v| v.parse::<CellIndex>().ok())))
             .collect()
     };
