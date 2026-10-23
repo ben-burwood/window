@@ -25,6 +25,7 @@
     ],
     "fileAssociations": [
       { "ext": ["csv"], "name": "CSV", "description": "Comma-Separated Values", "role": "Viewer" },
+      { "ext": ["tsv"], "name": "TSV", "description": "Tab-Separated Values", "role": "Viewer" },
       { "ext": ["parquet"], "name": "Parquet", "description": "Apache Parquet", "role": "Viewer" }
     ]
   }

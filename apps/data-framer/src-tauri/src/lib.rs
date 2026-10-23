@@ -35,7 +35,7 @@ fn query<T>(app: &AppHandle, f: impl Fn(&LoadedFile) -> Result<T, String>) -> Re
 // Commands
 // ---------------------------------------------------------------------------
 
-/// Load a parquet or CSV file: reads schema + row count (no data), stores
+/// Load a parquet, CSV or TSV file: reads schema + row count (no data), stores
 /// the file path in managed state, and returns metadata to the frontend.
 #[tauri::command]
 fn load_file(path: String, state: State<'_, AppState>) -> Result<FileInfo, String> {
@@ -186,7 +186,7 @@ fn get_chart_data(
 }
 
 /// Export the current view (with active sort, filters, and column selection) to a file.
-/// Format is inferred from `dest`'s extension: `.parquet` → Parquet, else CSV.
+/// Format is inferred from `dest`'s extension: `.parquet` → Parquet, `.tsv` → TSV, else CSV.
 #[tauri::command]
 fn export_file(
     dest: String,
@@ -220,7 +220,7 @@ fn export_file(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     window_tauri::run(
-        window_tauri::app(&["csv", "parquet"])
+        window_tauri::app(&["csv", "tsv", "parquet"])
             .manage(AppState {
                 file: Mutex::new(None),
             })

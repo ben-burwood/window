@@ -68,7 +68,7 @@ function onMenuSelect(id: string) {
 }
 
 // Extensions this app can open (validated on drag-drop).
-const SUPPORTED_EXTENSIONS = ["csv", "parquet"];
+const SUPPORTED_EXTENSIONS = ["csv", "tsv", "parquet"];
 function isSupported(path: string): boolean {
   const lower = path.toLowerCase();
   return SUPPORTED_EXTENSIONS.some((ext) => lower.endsWith(`.${ext}`));
@@ -194,11 +194,11 @@ async function openPath(path: string) {
 function handleDrop(paths: string[]) {
   const path = paths.find(isSupported);
   if (path) openPath(path);
-  else error.value = "Please drop a CSV or Parquet file.";
+  else error.value = "Please drop a CSV, TSV or Parquet file.";
 }
 
 async function chooseFile() {
-  const path = await openFile([{ name: "Data Files", extensions: ["parquet", "csv"] }]);
+  const path = await openFile([{ name: "Data Files", extensions: ["parquet", "csv", "tsv"] }]);
   if (!path) return;
   await openPath(path);
 }
@@ -225,6 +225,7 @@ onUnmounted(() => unlisteners.forEach((u) => u()));
 async function exportFile() {
   const dest = await saveFile([
     { name: "CSV", extensions: ["csv"] },
+    { name: "TSV", extensions: ["tsv"] },
     { name: "Parquet", extensions: ["parquet"] },
   ]);
   if (!dest) return;
@@ -377,7 +378,7 @@ function onColumnsReset() {
       <EmptyState
         v-else
         title="Open a dataset"
-        hint="Open a Parquet or CSV file to get started"
+        hint="Open a Parquet, CSV or TSV file to get started"
         :error="error"
         :dragging="dragging"
         :action-label="view === 'loading' ? 'Loading…' : 'Open File'"

@@ -92,19 +92,20 @@ impl Source {
         }
     }
 
-    /// Build a LazyFrame for this source. Supports .parquet and .csv.
+    /// Build a LazyFrame for this source. Supports .parquet, .csv and .tsv.
     pub fn scan(&self) -> Result<LazyFrame, String> {
         let path = self.path.as_str();
         match window_core::extension_lower(path).as_deref().unwrap_or("") {
             "parquet" => LazyFrame::scan_parquet(path.into(), ScanArgsParquet::default())
                 .map_err(|e| e.to_string()),
-            "csv" => {
+            ext @ ("csv" | "tsv") => {
                 let encoding = if self.lossy_utf8 {
                     CsvEncoding::LossyUtf8
                 } else {
                     CsvEncoding::Utf8
                 };
                 LazyCsvReader::new(path.into())
+                    .with_separator(separator_for(ext))
                     .with_encoding(encoding)
                     .finish()
                     .map_err(|e| e.to_string())
@@ -136,6 +137,15 @@ pub fn with_utf8_fallback<T>(
             f(source)
         }
         r => r,
+    }
+}
+
+/// Field separator for a delimited-text extension: tab for `tsv`, else comma.
+fn separator_for(ext: &str) -> u8 {
+    if ext == "tsv" {
+        b'\t'
+    } else {
+        b','
     }
 }
 
@@ -396,7 +406,7 @@ fn build_filter_expr(spec: &FilterSpec, dtype: &str) -> Result<Expr, String> {
 // ---------------------------------------------------------------------------
 
 /// Write a DataFrame to disk. Format is inferred from the file extension:
-/// `.parquet` → Parquet, anything else → CSV.
+/// `.parquet` → Parquet, `.tsv` → tab-separated, anything else → CSV.
 pub fn write_file(df: &mut DataFrame, path: &str) -> Result<(), String> {
     let file = std::fs::File::create(path).map_err(|e| e.to_string())?;
     match window_core::extension_lower(path).as_deref().unwrap_or("") {
@@ -404,7 +414,10 @@ pub fn write_file(df: &mut DataFrame, path: &str) -> Result<(), String> {
             .finish(df)
             .map(|_| ())
             .map_err(|e| e.to_string()),
-        _ => CsvWriter::new(file).finish(df).map_err(|e| e.to_string()),
+        ext => CsvWriter::new(file)
+            .with_separator(separator_for(ext))
+            .finish(df)
+            .map_err(|e| e.to_string()),
     }
 }
 
@@ -755,6 +768,24 @@ mod tests {
         let rows = frame_to_rows(&out);
         assert_eq!(rows[0]["st"], serde_json::json!({ "a": 1, "b": "x" }));
         assert_eq!(rows[0]["xs"][0], serde_json::json!(1));
+
+        std::fs::remove_file(path).ok();
+    }
+
+    /// TSV round-trips through `write_file` → `scan` with tab separators, so
+    /// commas inside fields are kept intact rather than splitting columns.
+    #[test]
+    fn tsv_round_trip() {
+        let mut df = df!["a" => [1i64, 2], "b" => ["x,y", "z"]].unwrap();
+        let path = std::env::temp_dir().join("data_framer_tsv_test.tsv");
+        let path_str = path.to_str().unwrap();
+        write_file(&mut df, path_str).unwrap();
+
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert_eq!(text.lines().next(), Some("a\tb"));
+
+        let read = Source::new(path_str).scan().unwrap().collect().unwrap();
+        assert!(read.equals(&df));
 
         std::fs::remove_file(path).ok();
     }
