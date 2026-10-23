@@ -401,16 +401,16 @@ function onColumnsReset() {
 .app {
   /* AG Grid Quartz design tokens — driven by the shared @window/ui --vw-* tokens so the grid,
      toolbar, panels and shared.css all follow one theme. */
-  --ag-active-color: var(--vw-accent);
+  --ag-accent-color: var(--vw-accent);
   --ag-background-color: var(--vw-bg);
   --ag-foreground-color: var(--vw-fg);
   --ag-border-color: var(--vw-border);
   --ag-header-background-color: var(--vw-surface);
-  --ag-row-hover-color: color-mix(in srgb, transparent, var(--ag-active-color) 12%);
+  --ag-row-hover-color: color-mix(in srgb, transparent, var(--ag-accent-color) 12%);
   --ag-disabled-foreground-color: var(--vw-fg-muted);
   --ag-input-border-color: var(--ag-border-color);
-  --ag-input-focus-border-color: var(--ag-active-color);
-  --ag-input-focus-box-shadow: 0 0 0 3px color-mix(in srgb, transparent, var(--ag-active-color) 47%);
+  --ag-input-focus-border-color: var(--ag-accent-color);
+  --ag-input-focus-box-shadow: 0 0 0 3px color-mix(in srgb, transparent, var(--ag-accent-color) 47%);
   --ag-chip-background-color: var(--vw-surface-2);
   --ag-font-family: var(--vw-font);
   --ag-font-size: 14px;

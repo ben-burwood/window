@@ -267,9 +267,9 @@ watch(
 }
 
 .type-toggle button.active {
-  background: var(--ag-active-color, #2196f3);
+  background: var(--ag-accent-color, #2196f3);
   color: #fff;
-  border-color: var(--ag-active-color, #2196f3);
+  border-color: var(--ag-accent-color, #2196f3);
 }
 
 /* X-axis dropdown */
@@ -317,7 +317,7 @@ watch(
 }
 
 .y-col-item input[type="checkbox"] {
-  accent-color: var(--ag-active-color, #2196f3);
+  accent-color: var(--ag-accent-color, #2196f3);
   cursor: pointer;
 }
 

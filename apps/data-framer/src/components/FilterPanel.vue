@@ -271,10 +271,10 @@ function clearFilters() {
 .filter-select:focus,
 .filter-value:focus {
   outline: none;
-  border-color: var(--ag-input-focus-border-color, var(--ag-active-color, #2196f3));
+  border-color: var(--ag-input-focus-border-color, var(--ag-accent-color, #2196f3));
   box-shadow: var(
     --ag-input-focus-box-shadow,
-    0 0 0 3px color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 47%)
+    0 0 0 3px color-mix(in srgb, transparent, var(--ag-accent-color, #2196f3) 47%)
   );
 }
 
@@ -331,13 +331,13 @@ function clearFilters() {
   font-size: 0.8rem;
   font-family: var(--ag-font-family, inherit);
   background: transparent;
-  color: var(--ag-active-color, #2196f3);
-  border: 1px dashed var(--ag-active-color, #2196f3);
+  color: var(--ag-accent-color, #2196f3);
+  border: 1px dashed var(--ag-accent-color, #2196f3);
   border-radius: var(--ag-border-radius, 4px);
   cursor: pointer;
 }
 
 .add-filter-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, transparent, var(--ag-active-color, #2196f3) 10%);
+  background: color-mix(in srgb, transparent, var(--ag-accent-color, #2196f3) 10%);
 }
 </style>

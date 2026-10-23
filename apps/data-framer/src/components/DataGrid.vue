@@ -7,6 +7,7 @@ import {
   InfiniteRowModelModule,
   ColumnAutoSizeModule,
   ColumnApiModule,
+  EventApiModule,
   CellStyleModule,
   ValidationModule,
 } from "ag-grid-community";
@@ -28,6 +29,7 @@ ModuleRegistry.registerModules([
   InfiniteRowModelModule,
   ColumnAutoSizeModule,
   ColumnApiModule,
+  EventApiModule,
   CellStyleModule,
   ValidationModule,
 ]);
