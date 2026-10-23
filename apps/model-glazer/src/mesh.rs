@@ -27,7 +27,7 @@ impl Aabb {
         }
         let mut min = [f32::INFINITY; 3];
         let mut max = [f32::NEG_INFINITY; 3];
-        for p in positions.chunks_exact(3) {
+        for p in positions.as_chunks::<3>().0 {
             for a in 0..3 {
                 min[a] = min[a].min(p[a]);
                 max[a] = max[a].max(p[a]);
@@ -155,25 +155,25 @@ fn load_3mf(path: &Path) -> Result<Mesh, String> {
     let mut saw_components = false;
     for model in &models {
         for object in &model.resources.object {
-            match &object.object {
-                threemf::model::ObjectData::Mesh(mesh) => {
-                    let base = (positions.len() / 3) as u32;
-                    positions.reserve(mesh.vertices.vertex.len() * 3);
-                    indices.reserve(mesh.triangles.triangle.len() * 3);
-                    for v in &mesh.vertices.vertex {
-                        positions.extend_from_slice(&[v.x as f32, v.y as f32, v.z as f32]);
-                    }
-                    for t in &mesh.triangles.triangle {
-                        indices.push(base + t.v1 as u32);
-                        indices.push(base + t.v2 as u32);
-                        indices.push(base + t.v3 as u32);
-                    }
+            if let Some(mesh) = &object.mesh {
+                let base = (positions.len() / 3) as u32;
+                positions.reserve(mesh.vertices.vertex.len() * 3);
+                indices.reserve(mesh.triangles.triangle.len() * 3);
+                for v in &mesh.vertices.vertex {
+                    positions.extend_from_slice(&[v.x as f32, v.y as f32, v.z as f32]);
                 }
-                // Component objects place other objects via transforms to form an
-                // assembly. We don't resolve that graph yet — concrete mesh
-                // objects are rendered at their own coordinates and any
-                // component transforms are dropped.
-                threemf::model::ObjectData::Components { .. } => saw_components = true,
+                for t in &mesh.triangles.triangle {
+                    indices.push(base + t.v1 as u32);
+                    indices.push(base + t.v2 as u32);
+                    indices.push(base + t.v3 as u32);
+                }
+            }
+            // Component objects place other objects via transforms to form an
+            // assembly. We don't resolve that graph yet — concrete mesh
+            // objects are rendered at their own coordinates and any
+            // component transforms are dropped.
+            if object.components.is_some() {
+                saw_components = true;
             }
         }
     }

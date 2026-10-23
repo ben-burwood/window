@@ -2,6 +2,23 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 
 /**
+ * Turn `{ chunkName: [packages] }` into a `manualChunks` function. Vite 8 (Rolldown) only
+ * accepts the function form; the object form fails with "manualChunks is not a function".
+ *
+ * @param {Record<string, string[]>} chunks
+ * @returns {(id: string) => string | undefined}
+ */
+function chunkByPackage(chunks) {
+  const entries = Object.entries(chunks).flatMap(([name, pkgs]) =>
+    pkgs.map((pkg) => /** @type {const} */ ([`/node_modules/${pkg}/`, name])),
+  );
+  return (id) => {
+    const path = id.replace(/\\/g, "/");
+    return entries.find(([needle]) => path.includes(needle))?.[1];
+  };
+}
+
+/**
  * Build a Vite config tailored for a Tauri v2 + Vue 3 viewer app.
  *
  * A factory, not a static config: each app passes its own vendor `manualChunks`. Common
@@ -27,7 +44,7 @@ export function viewerConfig(opts = {}) {
       clearScreen: false,
 
       build: opts.manualChunks
-        ? { rollupOptions: { output: { manualChunks: opts.manualChunks } } }
+        ? { rollupOptions: { output: { manualChunks: chunkByPackage(opts.manualChunks) } } }
         : {},
 
       // Tauri expects a fixed port and fails if it is not available.

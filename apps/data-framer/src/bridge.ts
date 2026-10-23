@@ -1,6 +1,7 @@
 // data-framer's typed IPC wrappers. Components import from here, never call invoke directly.
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@window/bridge";
+import type { Geometry } from "geojson";
 import type { FileInfo, FilterSpec, RowsResponse } from "./types";
 
 export {
@@ -25,7 +26,7 @@ export interface H3Feature {
   idx: number;
 }
 export interface GeomFeature {
-  geometry: GeoJSON.Geometry;
+  geometry: Geometry;
   idx: number;
 }
 

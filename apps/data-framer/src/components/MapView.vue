@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted, nextTick } from "vue";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useBasemap } from "@window/map";
 import { cellToBoundary } from "h3-js";
@@ -8,6 +8,7 @@ import { getMapPoints, getH3Values, getGeometry, getRow } from "../bridge";
 import type { MapPoint } from "../bridge";
 import { formatCellValue } from "../types";
 import type { FilterSpec } from "../types";
+import type { Feature } from "geojson";
 
 const props = defineProps<{
   active: boolean;
@@ -79,7 +80,7 @@ async function loadH3Cells(fit: boolean): Promise<[number, number][]> {
   });
 
   const allVerts: [number, number][] = [];
-  const features: GeoJSON.Feature[] = cells.map(({ cell, idx }) => {
+  const features: Feature[] = cells.map(({ cell, idx }) => {
     // cellToBoundary returns [[lat, lng], ...] — swap to [lng, lat] for GeoJSON
     const boundary = cellToBoundary(cell);
     const ring = boundary.map(([lat, lng]) => [lng, lat] as [number, number]);
@@ -119,7 +120,7 @@ async function loadGeometry(fit: boolean): Promise<[number, number][]> {
   });
 
   const allVerts: [number, number][] = [];
-  const features: GeoJSON.Feature[] = feats.map(({ geometry, idx }) => {
+  const features: Feature[] = feats.map(({ geometry, idx }) => {
     if (fit) collectCoords((geometry as { coordinates?: unknown }).coordinates, allVerts);
     return { type: "Feature", geometry, properties: { __idx: idx } };
   });

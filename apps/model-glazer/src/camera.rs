@@ -7,6 +7,7 @@
 //! scales off the model radius so it behaves the same for a 2&nbsp;mm screw or a
 //! 2&nbsp;m sculpture.
 
+use glam::camera::rh::{proj::opengl, view};
 use glam::{Mat4, Vec3};
 
 use crate::mesh::Aabb;
@@ -106,12 +107,12 @@ impl Camera {
     }
 
     pub fn view(&self) -> Mat4 {
-        Mat4::look_at_rh(self.eye(), self.target, Vec3::Y)
+        view::look_at_mat4(self.eye(), self.target, Vec3::Y)
     }
 
     pub fn projection(&self, aspect: f32) -> Mat4 {
         let near = (self.distance - self.radius).max(self.radius * 0.01);
         let far = self.distance + self.radius * 4.0;
-        Mat4::perspective_rh_gl(FOV_Y, aspect.max(1e-3), near, far)
+        opengl::perspective(FOV_Y, aspect.max(1e-3), near, far)
     }
 }

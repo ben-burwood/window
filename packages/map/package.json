@@ -8,7 +8,7 @@
     ".": "./src/index.ts"
   },
   "peerDependencies": {
-    "maplibre-gl": "^5.24.0",
+    "maplibre-gl": "^6.15.0",
     "vue": "^3.5"
   }
 }

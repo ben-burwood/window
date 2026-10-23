@@ -14,9 +14,9 @@ workspace = true
 
 [dependencies]
 window-core = { workspace = true }
-eframe = "0.35"
-egui = "0.35"
-rfd = "0.15"
+eframe = "0.37"
+egui = "0.37"
+rfd = "0.17"
 dxf = "0.6"
 
 # ---------------------------------------------------------------------------

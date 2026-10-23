@@ -559,7 +559,7 @@ pub fn get_map_features(
     let lons = lon_s.f64().map_err(|e| e.to_string())?;
 
     let mut out = Vec::with_capacity(df.height());
-    for ((row, lat), lon) in idx.into_iter().zip(lats.iter()).zip(lons.iter()) {
+    for ((row, lat), lon) in idx.iter().zip(lats.iter()).zip(lons.iter()) {
         if let (Some(row), Some(lat), Some(lon)) = (row, lat, lon) {
             out.push(MapPoint { lat, lon, idx: row });
         }
@@ -591,15 +591,15 @@ pub fn get_h3_features(
     let cells: Vec<Option<H3Feature>> = if column.dtype().is_integer() {
         let ints = column.cast(&DataType::UInt64).map_err(|e| e.to_string())?;
         let ints = ints.u64().map_err(|e| e.to_string())?;
-        idx.into_iter()
-            .zip(ints)
+        idx.iter()
+            .zip(ints.iter())
             .map(|(row, v)| h3_feature(row, v.and_then(|v| CellIndex::try_from(v).ok())))
             .collect()
     } else {
         let strs = column.cast(&DataType::String).map_err(|e| e.to_string())?;
         let strs = strs.str().map_err(|e| e.to_string())?;
-        idx.into_iter()
-            .zip(strs)
+        idx.iter()
+            .zip(strs.iter())
             .map(|(row, v)| h3_feature(row, v.and_then(|v| v.parse::<CellIndex>().ok())))
             .collect()
     };
@@ -728,7 +728,7 @@ mod tests {
         let lf = df!["x" => [1i64, 2, 3]]
             .unwrap()
             .lazy()
-            .select([col("x").implode().alias("xs")])
+            .select([col("x").implode(true).alias("xs")])
             .collect()
             .unwrap();
         assert_eq!(dtype_to_str(lf.column("xs").unwrap().dtype()), "list");
@@ -746,7 +746,7 @@ mod tests {
             .lazy()
             .select([
                 as_struct(vec![col("a"), col("b")]).alias("st"),
-                col("a").implode().over([lit(1)]).alias("xs"),
+                col("a").implode(true).over([lit(1)]).unwrap().alias("xs"),
             ])
             .collect()
             .unwrap();

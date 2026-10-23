@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, nextTick, ref, watch } from "vue";
 import * as pdfjsLib from "pdfjs-dist";
-import type { PDFDocumentProxy, PDFPageProxy, RenderTask } from "pdfjs-dist";
+import type {
+  PDFDocumentLoadingTask,
+  PDFPageProxy,
+  RenderTask,
+} from "pdfjs-dist";
 // Vite resolves this to a hashed URL for the bundled worker.
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { LoadedSource, ViewerState } from "../types";
@@ -31,7 +35,8 @@ let savedView: { scale: number; fitMode: FitMode; page: number } | null = null;
 
 // Held outside Vue reactivity on purpose: PDF.js manages its own internal state
 // and should not be wrapped in a reactive proxy.
-let pdfDoc: PDFDocumentProxy | null = null;
+// pdf.js 6 tears a document down via its loading task, not the proxy.
+let loadingTask: PDFDocumentLoadingTask | null = null;
 const pageProxies = new Map<number, PDFPageProxy>();
 const baseSizes = new Map<number, { w: number; h: number }>();
 const renderTasks = new Map<number, RenderTask>();
@@ -118,11 +123,8 @@ async function renderPage(n: number) {
   canvas.style.width = `${Math.floor(viewport.width)}px`;
   canvas.style.height = `${Math.floor(viewport.height)}px`;
 
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
   const task = page.render({
-    canvasContext: ctx,
+    canvas,
     viewport,
     transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : undefined,
   });
@@ -196,9 +198,9 @@ async function destroyDoc() {
   pageEls.clear();
   pageTextDivs.clear();
   pageTextStrs.clear();
-  if (pdfDoc) {
-    await pdfDoc.destroy();
-    pdfDoc = null;
+  if (loadingTask) {
+    await loadingTask.destroy();
+    loadingTask = null;
   }
 }
 
@@ -218,8 +220,8 @@ async function loadDocument(url: string) {
   findCount.value = 0;
   fitMode = "width";
   try {
-    const doc = await pdfjsLib.getDocument({ url }).promise;
-    pdfDoc = doc;
+    loadingTask = pdfjsLib.getDocument({ url });
+    const doc = await loadingTask.promise;
     const count = doc.numPages;
     // Fetch page proxies concurrently — each is an independent worker round-trip,
     // so a serial loop would make open latency grow with page count.

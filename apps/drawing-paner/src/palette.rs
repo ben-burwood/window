@@ -45,7 +45,7 @@ pub fn aci_rgb(index: u8) -> Rgb {
             let shade = i0 % 10; // 0..=9
             let hue = hue_index as f64 * 15.0;
             let value = VALUES[shade / 2];
-            let sat = if shade % 2 == 0 { 1.0 } else { 0.5 };
+            let sat = if shade.is_multiple_of(2) { 1.0 } else { 0.5 };
             hsv_to_rgb(hue, sat, value)
         }
         250..=255 => GRAYS[index as usize - 250],

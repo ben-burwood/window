@@ -19,14 +19,14 @@ window-core = { workspace = true }
 # backend for this crate. Other apps keep wgpu — when both backends are present
 # eframe's default `Renderer` is still Wgpu, so only this app (which asks for
 # `Renderer::Glow` in main.rs) uses GL.
-eframe = { version = "0.35", features = ["glow"] }
-egui = "0.35"
-egui_glow = "0.35"
-rfd = "0.15"
-glam = "0.29"
-stl_io = "0.8"
+eframe = { version = "0.37", features = ["glow"] }
+egui = "0.37"
+egui_glow = "0.37"
+rfd = "0.17"
+glam = "0.34"
+stl_io = "0.11"
 tobj = "4"
-threemf = "0.5"
+threemf = "0.8"
 
 # ---------------------------------------------------------------------------
 # cargo-packager configuration (https://github.com/crabnebula-dev/cargo-packager)

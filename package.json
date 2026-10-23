@@ -10,5 +10,13 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "maplibre-gl": "^6.15.0",
+    "typescript": "~6.0.3"
+  },
+  "overrides": {
+    "maplibre-gl": "$maplibre-gl",
+    "typescript": "$typescript"
   }
 }

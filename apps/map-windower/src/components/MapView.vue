@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
-import maplibregl, { type MapGeoJSONFeature } from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
+import type { MapGeoJSONFeature } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { PMTiles, Protocol, TileType } from "pmtiles";
 import { useBasemap } from "@window/map";
@@ -61,7 +62,9 @@ defineExpose({
 });
 
 function escapeHtml(value: unknown): string {
-  return String(value)
+  // MapLibre 6 hands back nested GeoJSON properties as objects rather than JSON strings.
+  const text = value !== null && typeof value === "object" ? JSON.stringify(value) : String(value);
+  return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")

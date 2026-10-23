@@ -1,5 +1,5 @@
 import { computed, ref } from "vue";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 export const BASEMAPS = {
   bright: { label: "Bright", url: "https://tiles.openfreemap.org/styles/bright" },
