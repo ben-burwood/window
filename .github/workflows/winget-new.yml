@@ -8,7 +8,7 @@ on:
         required: true
       apps:
         description: "Space/comma-separated app names to submit"
-        required: false
+        required: true
       dry_run:
         description: "Generate + validate only, do not open PRs"
         type: boolean

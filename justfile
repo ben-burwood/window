@@ -4,7 +4,8 @@ default:
     @just --list
 
 init:
-    npm install
+    npm ci
+    npm run build
 
 dev app:
     npm run tauri --workspace {{app}} -- dev --config ../../tauri.base.json

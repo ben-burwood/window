@@ -24,7 +24,6 @@
     "@types/geojson": "^7946.0.16",
     "@vitejs/plugin-vue": "^6.0.10",
     "@window/config": "*",
-    "typescript": "~6.0.3",
     "vite": "^8.3.5",
     "vue-tsc": "^3.3.13"
   }

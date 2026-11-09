@@ -1,17 +1,18 @@
 # Rust
 /target/
+**/*.rs.bk
+*.pdb
 
 # Node
 node_modules/
+*.local
+*.log
 
-# Frontend build output
+# Build output (Vite frontends and cargo-packager)
 dist/
 
 # Tauri generated
 apps/*/src-tauri/gen/
-
-# cargo-packager output
-apps/image-shutter/dist/
 
 # OS / editor
 .DS_Store
@@ -20,8 +21,10 @@ Thumbs.db
 .idea/
 .vscode/
 
-# sample files
+# Sample files
 *.csv
 *.geojson
-*.parquet
 *.geoparquet
+*.parquet
+*.pdf
+*.pmtiles

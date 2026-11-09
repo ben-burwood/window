@@ -39,7 +39,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: release
-          workspaces: ". -> target"
 
       - name: Install cargo-packager
         run: cargo install cargo-packager --locked
@@ -48,7 +47,7 @@ jobs:
         working-directory: apps/${{ matrix.app }}
         run: cargo packager --release --formats ${{ matrix.formats }}
 
-      - name: Publish to draft release
+      - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}

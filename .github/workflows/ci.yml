@@ -20,58 +20,42 @@ jobs:
       rust: ${{ steps.set.outputs.rust }}
     steps:
       - uses: actions/checkout@v7
+      - name: Generate path filters
+        run: |
+          {
+            echo "shared:"
+            for p in Cargo.toml Cargo.lock rust-toolchain.toml ".cargo/**" "crates/**" "packages/**" \
+                     package.json package-lock.json .nvmrc tauri.base.json ".github/workflows/**"; do
+              echo "  - '$p'"
+            done
+            for d in apps/*/; do
+              app=$(basename "$d")
+              echo "$app:"
+              echo "  - 'apps/$app/**'"
+            done
+          } > "$RUNNER_TEMP/filters.yml"
       - uses: dorny/paths-filter@v3
         id: f
         with:
-          filters: |
-            shared:
-              - 'Cargo.toml'
-              - 'Cargo.lock'
-              - 'rust-toolchain.toml'
-              - '.cargo/**'
-              - 'crates/**'
-              - 'packages/**'
-              - 'package.json'
-              - 'package-lock.json'
-              - 'tauri.base.json'
-              - '.github/workflows/**'
-            data-framer:
-              - 'apps/data-framer/**'
-            map-windower:
-              - 'apps/map-windower/**'
-            doc-viewer:
-              - 'apps/doc-viewer/**'
-            image-shutter:
-              - 'apps/image-shutter/**'
-            drawing-paner:
-              - 'apps/drawing-paner/**'
-            model-glazer:
-              - 'apps/model-glazer/**'
-            ssh-sill:
-              - 'apps/ssh-sill/**'
+          filters: ${{ runner.temp }}/filters.yml
       - id: set
         env:
-          SHARED: ${{ steps.f.outputs.shared }}
-          DF: ${{ steps.f.outputs.data-framer }}
-          MW: ${{ steps.f.outputs.map-windower }}
-          DV: ${{ steps.f.outputs.doc-viewer }}
-          IS: ${{ steps.f.outputs.image-shutter }}
-          DP: ${{ steps.f.outputs.drawing-paner }}
-          MG: ${{ steps.f.outputs.model-glazer }}
-          SS: ${{ steps.f.outputs.ssh-sill }}
+          CHANGES: ${{ steps.f.outputs.changes }}
         run: |
           rust='[]'
           add() { rust=$(jq -c ". += [$1]" <<<"$rust"); }
-          on() { [ "$SHARED" = "true" ] || [ "$1" = "true" ]; }
+          changed() { [[ "$CHANGES" == *"\"$1\""* ]]; }
           # crate = cargo package name; deps = system libs to install; web = frontend to build
-          if on "$DF"; then add '{"crate":"data-framer","deps":"webkit","web":"data-framer"}'; fi
-          if on "$MW"; then add '{"crate":"map-windower","deps":"webkit","web":"map-windower"}'; fi
-          if on "$DV"; then add '{"crate":"doc-viewer","deps":"webkit","web":"doc-viewer"}'; fi
-          if on "$IS"; then add '{"crate":"image-shutter","deps":"egui","web":""}'; fi
-          if on "$DP"; then add '{"crate":"drawing-paner","deps":"egui","web":""}'; fi
-          if on "$MG"; then add '{"crate":"model-glazer","deps":"egui","web":""}'; fi
-          if on "$SS"; then add '{"crate":"ssh-sill","deps":"egui","web":""}'; fi
-          if [ "$SHARED" = "true" ]; then
+          for d in apps/*/; do
+            app=$(basename "$d")
+            changed shared || changed "$app" || continue
+            if [ -d "apps/$app/src-tauri" ]; then
+              add "{\"crate\":\"$app\",\"deps\":\"webkit\",\"web\":\"$app\"}"
+            else
+              add "{\"crate\":\"$app\",\"deps\":\"egui\",\"web\":\"\"}"
+            fi
+          done
+          if changed shared; then
             add '{"crate":"window-core","deps":"none","web":""}'
             add '{"crate":"window-tauri","deps":"webkit","web":""}'
           fi
@@ -88,9 +72,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - uses: voidzero-dev/setup-vp@v1
@@ -125,10 +109,10 @@ jobs:
 
       # Tauri app crates embed the built frontend at compile time (generate_context! reads
       # ../dist), so build the frontend first. `npm run build` also runs vue-tsc (typecheck).
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: matrix.web != ''
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
       - if: matrix.web != ''
         run: npm ci

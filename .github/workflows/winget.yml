@@ -10,6 +10,9 @@ on:
         description: "Release Tag"
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   winget:
     runs-on: windows-latest
@@ -31,11 +34,16 @@ jobs:
             id: BenBurwood.DrawingPaner
           - app: model-glazer
             id: BenBurwood.ModelGlazer
+          - app: ssh-sill
+            id: BenBurwood.SshSill
     steps:
       - name: Publish ${{ matrix.app }} update to WinGet
         shell: pwsh
+        env:
+          TAG: ${{ inputs.release || github.event.workflow_run.head_branch }}
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
         run: |
-          $tag = "${{ inputs.release || github.event.workflow_run.head_branch }}"   # e.g. v0.1.2
+          $tag = $env:TAG                                                          # e.g. v0.1.2
           $version = $tag -replace '^v', ''                                         # e.g. 0.1.2
 
           $installerUrl = "https://github.com/ben-burwood/window/releases/download/$tag/${{ matrix.app }}_${version}_x64-setup.exe"
@@ -45,4 +53,4 @@ jobs:
             --version $version `
             --urls "$installerUrl" `
             --submit `
-            --token "${{ secrets.WINGET_TOKEN }}"
+            --token $env:WINGET_TOKEN

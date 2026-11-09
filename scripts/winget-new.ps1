@@ -10,16 +10,16 @@
   once a package already exists in winget-pkgs, so brand-new packages must be submitted here
   first. After the first version merges, winget.yml keeps them updated on every release.
 .PARAMETER Version  Release version without leading v, e.g. 0.1.3 (must match a published tag).
-.PARAMETER Apps     App names to submit. Defaults to the apps still needing a first submission.
+.PARAMETER Apps     App names to submit (each must not yet exist in winget-pkgs).
 .PARAMETER Token    GitHub PAT (classic, public_repo). Defaults to $env:WINGET_TOKEN.
 .PARAMETER DryRun   Generate + validate + print manifests, but do NOT submit.
-.EXAMPLE  ./scripts/winget-new.ps1 -Version 0.1.3 -DryRun
+.EXAMPLE  ./scripts/winget-new.ps1 -Version 0.1.3 -Apps ssh-sill -DryRun
 .EXAMPLE  ./scripts/winget-new.ps1 -Version 0.1.3 -Apps doc-viewer -Token $env:WINGET_TOKEN
 #>
 [CmdletBinding()]
 param(
   [Parameter(Mandatory)][string]$Version,
-  [string[]]$Apps = @('doc-viewer','map-windower','image-shutter','drawing-paner','model-glazer'),
+  [Parameter(Mandatory)][string[]]$Apps,
   [string]$Token = $env:WINGET_TOKEN,
   [switch]$DryRun
 )
@@ -34,6 +34,7 @@ $meta = @{
   'image-shutter' = @{ Id='BenBurwood.ImageShutter'; Name='Image Shutter'; Desc='A tiny, fast, native SVG viewer';           Moniker='image-shutter'; Tags=@('svg','image','viewer') }
   'drawing-paner' = @{ Id='BenBurwood.DrawingPaner'; Name='Drawing Paner'; Desc='A tiny, fast, native DXF viewer';           Moniker='drawing-paner'; Tags=@('dxf','cad','drawing','viewer') }
   'model-glazer'  = @{ Id='BenBurwood.ModelGlazer';  Name='Model Glazer';  Desc='A tiny, fast, native 3D model viewer';      Moniker='model-glazer';  Tags=@('stl','obj','3mf','3d','viewer') }
+  'ssh-sill'      = @{ Id='BenBurwood.SshSill';      Name='SSH Sill';      Desc='A tiny, fast, native SSH known_hosts editor'; Moniker='ssh-sill';      Tags=@('ssh','known-hosts','editor') }
 }
 
 $publisher  = 'Ben Burwood'

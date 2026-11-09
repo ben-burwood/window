@@ -10,10 +10,10 @@
       "default": "./vite.js"
     },
     "./tsconfig.base.json": "./tsconfig.base.json",
-    "./eslint": "./eslint.config.mjs"
+    "./tsconfig.node.json": "./tsconfig.node.json"
   },
   "peerDependencies": {
-    "@vitejs/plugin-vue": "^5",
-    "vite": "^6"
+    "@vitejs/plugin-vue": "^6",
+    "vite": "^8"
   }
 }

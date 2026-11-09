@@ -32,6 +32,9 @@ jobs:
             libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
 
       - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
 
       - run: rustup show
       - name: Add macOS universal target
@@ -40,9 +43,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          # Keyed on the single root Cargo.lock via rust-cache's default lockfile hashing.
           shared-key: release
-          workspaces: ". -> target"
 
       - run: npm ci
 

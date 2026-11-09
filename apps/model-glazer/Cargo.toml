@@ -6,6 +6,7 @@ edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
+publish.workspace = true
 repository.workspace = true
 readme.workspace = true
 
@@ -19,10 +20,10 @@ window-core = { workspace = true }
 # backend for this crate. Other apps keep wgpu — when both backends are present
 # eframe's default `Renderer` is still Wgpu, so only this app (which asks for
 # `Renderer::Glow` in main.rs) uses GL.
-eframe = { version = "0.37", features = ["glow"] }
-egui = "0.37"
-egui_glow = "0.37"
-rfd = "0.17"
+eframe = { workspace = true, features = ["glow"] }
+egui = { workspace = true }
+egui_glow = { workspace = true }
+rfd = { workspace = true }
 glam = "0.34"
 stl_io = "0.11"
 tobj = "4"
