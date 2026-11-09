@@ -4,8 +4,8 @@ description = "Shared Tauri plumbing for the viewer apps: common plugins, startu
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-license.workspace = true
 authors.workspace = true
+license.workspace = true
 
 [lints]
 workspace = true

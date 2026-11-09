@@ -1,13 +1,13 @@
 [package]
 name = "ssh-sill"
+description = "SSH known_hosts editor"
 version.workspace = true
 edition.workspace = true
-description = "SSH known_hosts editor"
+rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
-rust-version.workspace = true
-repository = "https://github.com/ben-burwood/window"
-readme = "README.md"
+repository.workspace = true
+readme.workspace = true
 
 [lints]
 workspace = true

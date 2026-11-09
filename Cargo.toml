@@ -18,6 +18,8 @@ edition = "2021"
 rust-version = "1.99"
 license = "MIT"
 authors = ["Ben Burwood"]
+repository = "https://github.com/ben-burwood/window"
+readme = "README.md"
 
 # Shared dependency versions. Apps opt in with e.g. `serde = { workspace = true }`, and may add extra features on top (e.g. tauri's `protocol-asset`).
 # App-specific deps (polars, arrow/parquet, resvg, ...) stay in their app's Cargo.toml.

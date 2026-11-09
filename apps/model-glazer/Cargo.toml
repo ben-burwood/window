@@ -1,13 +1,13 @@
 [package]
 name = "model-glazer"
+description = "A tiny, fast, native 3D model viewer"
 version.workspace = true
 edition.workspace = true
-description = "A tiny, fast, native 3D model viewer"
+rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
-rust-version.workspace = true
-repository = "https://github.com/ben-burwood/window"
-readme = "README.md"
+repository.workspace = true
+readme.workspace = true
 
 [lints]
 workspace = true
