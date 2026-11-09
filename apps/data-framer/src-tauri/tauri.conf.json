@@ -26,6 +26,8 @@
     "fileAssociations": [
       { "ext": ["csv"], "name": "CSV", "description": "Comma-Separated Values", "role": "Viewer" },
       { "ext": ["tsv"], "name": "TSV", "description": "Tab-Separated Values", "role": "Viewer" },
+      { "ext": ["json"], "name": "JSON", "description": "JSON", "role": "Viewer" },
+      { "ext": ["ndjson", "jsonl"], "name": "NDJSON", "description": "Newline-Delimited JSON", "role": "Viewer" },
       { "ext": ["parquet"], "name": "Parquet", "description": "Apache Parquet", "role": "Viewer" }
     ]
   }

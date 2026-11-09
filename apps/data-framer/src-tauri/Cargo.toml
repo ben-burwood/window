@@ -38,6 +38,7 @@ polars = { version = "0.55", features = [
   "lazy",
   "parquet",
   "csv",
+  "json",
   "dtype-full",
   "dtype-extension",
   "strings",

@@ -30,7 +30,7 @@ export interface GeomFeature {
   idx: number;
 }
 
-/** Open a Parquet/CSV/TSV file and read its schema + row count. */
+/** Open a Parquet/CSV/TSV/JSON file and read its schema + row count. */
 export function loadFile(path: string) {
   return invoke<FileInfo>("load_file", { path });
 }
@@ -95,7 +95,7 @@ export function getRow(index: number) {
   return invoke<Record<string, unknown> | null>("get_row", { index });
 }
 
-/** Export the current view (filters + sort + column selection) to CSV/TSV/Parquet. */
+/** Export the current view (filters + sort + column selection) to CSV/TSV/JSON/Parquet. */
 export type ExportFileArgs = {
   dest: string;
   sortCol: string | null;

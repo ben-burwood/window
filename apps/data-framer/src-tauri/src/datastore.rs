@@ -1,7 +1,7 @@
 use h3o::CellIndex;
 use polars::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, OnceLock};
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -82,6 +82,9 @@ pub struct Source {
     pub path: String,
     /// Decode CSV text with `LossyUtf8` (invalid bytes → U+FFFD)
     pub lossy_utf8: bool,
+    /// Parsed `.json` contents. Polars can't scan a JSON array lazily, so the
+    /// file is read once and shared by clones of this source.
+    json: Arc<OnceLock<DataFrame>>,
 }
 
 impl Source {
@@ -89,14 +92,30 @@ impl Source {
         Self {
             path: path.to_string(),
             lossy_utf8: false,
+            json: Arc::default(),
         }
     }
 
-    /// Build a LazyFrame for this source. Supports .parquet, .csv and .tsv.
+    /// Build a LazyFrame for this source. Supports .parquet, .csv, .tsv, .json
+    /// and .ndjson/.jsonl.
     pub fn scan(&self) -> Result<LazyFrame, String> {
         let path = self.path.as_str();
         match window_core::extension_lower(path).as_deref().unwrap_or("") {
             "parquet" => LazyFrame::scan_parquet(path.into(), ScanArgsParquet::default())
+                .map_err(|e| e.to_string()),
+            "json" => {
+                if let Some(df) = self.json.get() {
+                    return Ok(df.clone().lazy());
+                }
+                let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
+                let df = JsonReader::new(file)
+                    .with_json_format(JsonFormat::Json)
+                    .finish()
+                    .map_err(|e| e.to_string())?;
+                Ok(self.json.get_or_init(|| df).clone().lazy())
+            }
+            "ndjson" | "jsonl" => LazyJsonLineReader::new(path.into())
+                .finish()
                 .map_err(|e| e.to_string()),
             ext @ ("csv" | "tsv") => {
                 let encoding = if self.lossy_utf8 {
@@ -406,13 +425,22 @@ fn build_filter_expr(spec: &FilterSpec, dtype: &str) -> Result<Expr, String> {
 // ---------------------------------------------------------------------------
 
 /// Write a DataFrame to disk. Format is inferred from the file extension:
-/// `.parquet` → Parquet, `.tsv` → tab-separated, anything else → CSV.
+/// `.parquet` → Parquet, `.tsv` → tab-separated, `.json` → JSON array of
+/// records, `.ndjson`/`.jsonl` → one record per line, anything else → CSV.
 pub fn write_file(df: &mut DataFrame, path: &str) -> Result<(), String> {
     let file = std::fs::File::create(path).map_err(|e| e.to_string())?;
     match window_core::extension_lower(path).as_deref().unwrap_or("") {
         "parquet" => ParquetWriter::new(file)
             .finish(df)
             .map(|_| ())
+            .map_err(|e| e.to_string()),
+        ext @ ("json" | "ndjson" | "jsonl") => JsonWriter::new(file)
+            .with_json_format(if ext == "json" {
+                JsonFormat::Json
+            } else {
+                JsonFormat::JsonLines
+            })
+            .finish(df)
             .map_err(|e| e.to_string()),
         ext => CsvWriter::new(file)
             .with_separator(separator_for(ext))
@@ -788,6 +816,26 @@ mod tests {
         assert!(read.equals(&df));
 
         std::fs::remove_file(path).ok();
+    }
+
+    /// JSON (array of records) and NDJSON both round-trip through
+    /// `write_file` → `scan`.
+    #[test]
+    fn json_round_trip() {
+        for ext in ["json", "ndjson", "jsonl"] {
+            let mut df = df!["a" => [1i64, 2], "b" => ["x,y", "z"]].unwrap();
+            let path = std::env::temp_dir().join(format!("data_framer_json_test.{ext}"));
+            let path_str = path.to_str().unwrap();
+            write_file(&mut df, path_str).unwrap();
+
+            let text = std::fs::read_to_string(&path).unwrap();
+            assert_eq!(text.trim_start().starts_with('['), ext == "json");
+
+            let read = Source::new(path_str).scan().unwrap().collect().unwrap();
+            assert!(read.equals(&df), "{ext}: {read}");
+
+            std::fs::remove_file(path).ok();
+        }
     }
 
     /// A Latin-1 byte deep in a CSV doesn't affect queries that never parse it;
