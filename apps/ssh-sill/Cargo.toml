@@ -1,0 +1,41 @@
+[package]
+name = "ssh-sill"
+version.workspace = true
+edition.workspace = true
+description = "SSH known_hosts editor"
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository = "https://github.com/ben-burwood/window"
+readme = "README.md"
+
+[lints]
+workspace = true
+
+[dependencies]
+window-core = { workspace = true }
+eframe = "0.37"
+egui = "0.37"
+egui_extras = "0.37"
+rfd = "0.17"
+base64 = "0.22"
+sha2 = "0.10"
+
+# ---------------------------------------------------------------------------
+# cargo-packager configuration (https://github.com/crabnebula-dev/cargo-packager)
+# Produces .dmg/.app (macOS), NSIS .exe (Windows), .deb/.AppImage (Linux) and
+# generates the platform icons from icons/icon.png. known_hosts has no file
+# extension, so there is no file association; the app opens ~/.ssh/known_hosts
+# by default.
+# ---------------------------------------------------------------------------
+[package.metadata.packager]
+product-name = "SSH Sill"
+identifier = "com.ssh-sill.app"
+before-packaging-command = "cargo build --release"
+icons = ["icons/icon.png"]
+out-dir = "dist"
+category = "Utility"
+authors = ["Ben Burwood"]
+publisher = "Ben Burwood"
+license-file = "../../LICENSE"
+homepage = "https://github.com/ben-burwood/window"
