@@ -4,8 +4,8 @@
 
 use egui::{Align2, Color32, FontId, Pos2, Rect, Sense, Stroke, Vec2, ViewportCommand};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use crate::dxf::{self, Bounds, Primitive};
@@ -294,14 +294,14 @@ impl DrawingPanerApp {
         // trackpad pinch come through as `zoom_delta`.
         let (scroll, zoom_delta) = ctx.input(|i| (i.smooth_scroll_delta.y, i.zoom_delta()));
         let factor = (scroll * 0.0015).exp() * zoom_delta;
-        if factor != 1.0 {
-            if let Some(cursor) = response.hover_pos() {
-                let new_zoom = (self.zoom * factor).clamp(MIN_ZOOM, MAX_ZOOM);
-                let ratio = new_zoom / self.zoom;
-                // Keep the world point under the cursor fixed.
-                self.offset -= (cursor - pc - self.offset) * (ratio - 1.0);
-                self.zoom = new_zoom;
-            }
+        if factor != 1.0
+            && let Some(cursor) = response.hover_pos()
+        {
+            let new_zoom = (self.zoom * factor).clamp(MIN_ZOOM, MAX_ZOOM);
+            let ratio = new_zoom / self.zoom;
+            // Keep the world point under the cursor fixed.
+            self.offset -= (cursor - pc - self.offset) * (ratio - 1.0);
+            self.zoom = new_zoom;
         }
 
         // Pan on drag.

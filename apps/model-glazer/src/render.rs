@@ -208,31 +208,33 @@ unsafe fn link_program(
     vert: &str,
     frag: &str,
 ) -> Result<glow::Program, String> {
-    let program = gl.create_program()?;
-    let mut shaders = Vec::new();
-    for (kind, src) in [(glow::VERTEX_SHADER, vert), (glow::FRAGMENT_SHADER, frag)] {
-        let shader = gl.create_shader(kind)?;
-        gl.shader_source(shader, src);
-        gl.compile_shader(shader);
-        if !gl.get_shader_compile_status(shader) {
-            let log = gl.get_shader_info_log(shader);
-            gl.delete_shader(shader);
-            gl.delete_program(program);
-            return Err(format!("shader compile failed: {log}"));
+    unsafe {
+        let program = gl.create_program()?;
+        let mut shaders = Vec::new();
+        for (kind, src) in [(glow::VERTEX_SHADER, vert), (glow::FRAGMENT_SHADER, frag)] {
+            let shader = gl.create_shader(kind)?;
+            gl.shader_source(shader, src);
+            gl.compile_shader(shader);
+            if !gl.get_shader_compile_status(shader) {
+                let log = gl.get_shader_info_log(shader);
+                gl.delete_shader(shader);
+                gl.delete_program(program);
+                return Err(format!("shader compile failed: {log}"));
+            }
+            gl.attach_shader(program, shader);
+            shaders.push(shader);
         }
-        gl.attach_shader(program, shader);
-        shaders.push(shader);
+        gl.link_program(program);
+        if !gl.get_program_link_status(program) {
+            let log = gl.get_program_info_log(program);
+            return Err(format!("program link failed: {log}"));
+        }
+        for shader in shaders {
+            gl.detach_shader(program, shader);
+            gl.delete_shader(shader);
+        }
+        Ok(program)
     }
-    gl.link_program(program);
-    if !gl.get_program_link_status(program) {
-        let log = gl.get_program_info_log(program);
-        return Err(format!("program link failed: {log}"));
-    }
-    for shader in shaders {
-        gl.detach_shader(program, shader);
-        gl.delete_shader(shader);
-    }
-    Ok(program)
 }
 
 /// Reinterpret a slice of plain-old-data (`f32`/`u32` here) as bytes for

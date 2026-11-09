@@ -161,11 +161,7 @@ pub fn with_utf8_fallback<T>(
 
 /// Field separator for a delimited-text extension: tab for `tsv`, else comma.
 fn separator_for(ext: &str) -> u8 {
-    if ext == "tsv" {
-        b'\t'
-    } else {
-        b','
-    }
+    if ext == "tsv" { b'\t' } else { b',' }
 }
 
 pub fn count_rows(lf: &LazyFrame) -> Result<usize, String> {

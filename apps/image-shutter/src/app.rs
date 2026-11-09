@@ -4,8 +4,8 @@
 
 use egui::{Color32, Rect, Sense, TextureHandle, TextureOptions, Vec2, ViewportCommand};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use crate::svg::{self, SvgImage};
@@ -315,13 +315,13 @@ impl ImageShutterApp {
         // the two never double-apply).
         let (scroll, zoom_delta) = ctx.input(|i| (i.smooth_scroll_delta.y, i.zoom_delta()));
         let factor = (scroll * 0.0015).exp() * zoom_delta;
-        if factor != 1.0 {
-            if let Some(cursor) = response.hover_pos() {
-                let world = (cursor - img_min) / self.zoom; // point in intrinsic px
-                self.zoom = (self.zoom * factor).clamp(MIN_ZOOM, MAX_ZOOM);
-                let new_min = cursor - world * self.zoom;
-                self.offset = new_min - center + base * self.zoom * 0.5;
-            }
+        if factor != 1.0
+            && let Some(cursor) = response.hover_pos()
+        {
+            let world = (cursor - img_min) / self.zoom; // point in intrinsic px
+            self.zoom = (self.zoom * factor).clamp(MIN_ZOOM, MAX_ZOOM);
+            let new_min = cursor - world * self.zoom;
+            self.offset = new_min - center + base * self.zoom * 0.5;
         }
 
         // Pan on drag.

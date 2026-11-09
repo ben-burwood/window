@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, nextTick, ref, watch } from "vue";
 import * as pdfjsLib from "pdfjs-dist";
-import type {
-  PDFDocumentLoadingTask,
-  PDFPageProxy,
-  RenderTask,
-} from "pdfjs-dist";
+import type { PDFDocumentLoadingTask, PDFPageProxy, RenderTask } from "pdfjs-dist";
 // Vite resolves this to a hashed URL for the bundled worker.
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { LoadedSource, ViewerState } from "../types";

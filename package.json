@@ -4,9 +4,6 @@
   "private": true,
   "description": "Monorepo for desktop viewer apps",
   "license": "MIT",
-  "engines": {
-    "node": ">=24"
-  },
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -21,5 +18,8 @@
   "overrides": {
     "maplibre-gl": "$maplibre-gl",
     "typescript": "$typescript"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

@@ -10,8 +10,8 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use dxf::entities::{Entity, EntityType};
 use dxf::Block;
+use dxf::entities::{Entity, EntityType};
 
 use crate::palette::{self, Rgb};
 

@@ -198,7 +198,9 @@ function handleDrop(paths: string[]) {
 }
 
 async function chooseFile() {
-  const path = await openFile([{ name: "Data Files", extensions: ["parquet", "csv", "tsv", "json", "ndjson", "jsonl"] }]);
+  const path = await openFile([
+    { name: "Data Files", extensions: ["parquet", "csv", "tsv", "json", "ndjson", "jsonl"] },
+  ]);
   if (!path) return;
   await openPath(path);
 }

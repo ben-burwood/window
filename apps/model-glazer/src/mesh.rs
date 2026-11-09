@@ -51,11 +51,7 @@ impl Aabb {
         let dy = self.max[1] - self.min[1];
         let dz = self.max[2] - self.min[2];
         let r = 0.5 * (dx * dx + dy * dy + dz * dz).sqrt();
-        if r.is_finite() && r > 1e-6 {
-            r
-        } else {
-            1.0
-        }
+        if r.is_finite() && r > 1e-6 { r } else { 1.0 }
     }
 }
 

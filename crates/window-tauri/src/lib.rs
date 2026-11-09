@@ -69,7 +69,7 @@ mod command {
     }
 }
 
-pub use command::{get_startup_file, watch_file, StartupFile, WatchState};
+pub use command::{StartupFile, WatchState, get_startup_file, watch_file};
 
 /// Begin building a viewer app: registers the common plugins (`opener`, `dialog`), manages
 /// startup-file state, and installs the first-launch argv handler. `extensions` are the

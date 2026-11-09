@@ -1,5 +1,5 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = [
   "crates/window-core",
   "crates/window-tauri",
@@ -14,7 +14,7 @@ members = [
 
 [workspace.package]
 version = "0.1.7"
-edition = "2021"
+edition = "2024"
 rust-version = "1.99"
 license = "MIT"
 authors = ["Ben Burwood"]

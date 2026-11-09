@@ -19,10 +19,10 @@ fn query<T>(app: &AppHandle, f: impl Fn(&LoadedFile) -> Result<T, String>) -> Re
         Err(e) if !file.source.lossy_utf8 && datastore::is_utf8_error(&e) => {
             file.source.lossy_utf8 = true;
             // Only flag the file we ran against, in case another was loaded meanwhile.
-            if let Some(stored) = state.file.lock().unwrap().as_mut() {
-                if stored.source.path == file.source.path {
-                    stored.source.lossy_utf8 = true;
-                }
+            if let Some(stored) = state.file.lock().unwrap().as_mut()
+                && stored.source.path == file.source.path
+            {
+                stored.source.lossy_utf8 = true;
             }
             let _ = app.emit(LOSSY_UTF8_EVENT, &file.source.path);
             f(&file)

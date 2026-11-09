@@ -4,14 +4,14 @@ A monorepo for seven small desktop applications that share a framework-free Rust
 
 **One repo, one lockfile, one toolchain, seven independently-built binaries.**
 
-| App             | Format        | Stack                                    |
-| --------------- | ------------- | ---------------------------------------- |
-| `data-framer`   | CSV / Parquet | Tauri v2 + Vue 3 (Polars)                |
-| `map-windower`  | GeoJSON       | Tauri v2 + Vue 3 (MapLibre)              |
-| `doc-viewer`    | PDF           | Tauri v2 + Vue 3 (PDF.js)                |
-| `image-shutter` | SVG           | egui / eframe + resvg (cargo-packager)   |
-| `drawing-paner` | DXF           | egui / eframe + dxf (cargo-packager)     |
-| `model-glazer`  | STL/OBJ/3MF   | egui / eframe + glow 3D (cargo-packager) |
+| App             | Format        | Stack                                        |
+| --------------- | ------------- | -------------------------------------------- |
+| `data-framer`   | CSV / Parquet | Tauri v2 + Vue 3 (Polars)                    |
+| `map-windower`  | GeoJSON       | Tauri v2 + Vue 3 (MapLibre)                  |
+| `doc-viewer`    | PDF           | Tauri v2 + Vue 3 (PDF.js)                    |
+| `image-shutter` | SVG           | egui / eframe + resvg (cargo-packager)       |
+| `drawing-paner` | DXF           | egui / eframe + dxf (cargo-packager)         |
+| `model-glazer`  | STL/OBJ/3MF   | egui / eframe + glow 3D (cargo-packager)     |
 | `ssh-sill`      | known_hosts   | egui / eframe + egui_extras (cargo-packager) |
 
 ## Layout

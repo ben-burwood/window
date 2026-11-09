@@ -8,7 +8,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use notify::{RecommendedWatcher, RecursiveMode};
-use notify_debouncer_mini::{new_debouncer, DebounceEventResult, Debouncer};
+use notify_debouncer_mini::{DebounceEventResult, Debouncer, new_debouncer};
 
 /// An active file watch. Dropping it stops watching.
 pub struct FileWatch {
@@ -25,10 +25,10 @@ pub fn watch_file(
     let mut debouncer = new_debouncer(debounce, move |res: DebounceEventResult| {
         // A non-empty batch means the file changed; the error case (watch dropped/errored) is
         // ignored — the worst outcome is simply not flagging the file as outdated.
-        if let Ok(events) = res {
-            if !events.is_empty() {
-                on_change();
-            }
+        if let Ok(events) = res
+            && !events.is_empty()
+        {
+            on_change();
         }
     })
     .map_err(|e| e.to_string())?;

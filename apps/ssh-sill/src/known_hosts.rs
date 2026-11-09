@@ -6,8 +6,8 @@
 //! [@cert-authority|@revoked] host1,[host2]:2222 key-type base64-key [comment]
 //! ```
 
-use base64::engine::general_purpose::{STANDARD, STANDARD_NO_PAD};
 use base64::Engine;
+use base64::engine::general_purpose::{STANDARD, STANDARD_NO_PAD};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 
@@ -308,9 +308,10 @@ mod tests {
         let mut kh = KnownHosts::parse(&sample());
         let e = Entry::new("a.test, b.test", "ssh-ed25519", GH_KEY, "new", None).unwrap();
         kh.push(e);
-        assert!(kh
-            .serialize()
-            .ends_with(&format!("a.test,b.test ssh-ed25519 {GH_KEY} new\n")));
+        assert!(
+            kh.serialize()
+                .ends_with(&format!("a.test,b.test ssh-ed25519 {GH_KEY} new\n"))
+        );
 
         let (first, _) = kh.entries().next().unwrap();
         kh.remove(first);

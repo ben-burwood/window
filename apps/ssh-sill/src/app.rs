@@ -1,8 +1,8 @@
 use egui::{Color32, ViewportCommand};
 use egui_extras::{Column, TableBuilder};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use crate::known_hosts::{self, Entry, KnownHosts, Marker};

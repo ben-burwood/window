@@ -10,10 +10,10 @@
 
 use std::fs::File;
 
-use arrow_array::{cast::AsArray, Array, RecordBatch};
+use arrow_array::{Array, RecordBatch, cast::AsArray};
 use arrow_schema::DataType;
-use geozero::wkb::Wkb;
 use geozero::ToJson;
+use geozero::wkb::Wkb;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
 use serde_json::Value;
 
@@ -125,7 +125,7 @@ fn wkb_to_geojson(col: &dyn Array, row: usize) -> Result<Option<String>, String>
         other => {
             return Err(format!(
                 "Geometry column has unsupported Arrow type {other:?}; expected binary WKB."
-            ))
+            ));
         }
     };
     if bytes.is_empty() {
@@ -189,5 +189,7 @@ fn is_wgs84_name(s: &str) -> bool {
 }
 
 fn crs_error(what: &str) -> String {
-    format!("Only WGS84 / CRS84 GeoParquet is supported (file declares CRS: {what}). Reproject to EPSG:4326 first.")
+    format!(
+        "Only WGS84 / CRS84 GeoParquet is supported (file declares CRS: {what}). Reproject to EPSG:4326 first."
+    )
 }
