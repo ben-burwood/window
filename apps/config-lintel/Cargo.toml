@@ -18,7 +18,11 @@ workspace = true
 window-core = { workspace = true }
 eframe = { workspace = true }
 egui = { workspace = true }
-egui_extras = { workspace = true }
+# syntect highlighting; two-face adds the syntaxes syntect's defaults lack (TOML). Both use the
+# pure-Rust regex engine ("fancy") like egui_extras, so there's no C dependency.
+egui_extras = { workspace = true, features = ["syntect"] }
+syntect = { version = "5.3", default-features = false, features = ["default-themes", "regex-fancy"] }
+two-face = { version = "0.5", default-features = false, features = ["syntect-fancy"] }
 rfd = { workspace = true }
 serde = { workspace = true }
 # preserve_order keeps tables / objects in document order in the tree.
