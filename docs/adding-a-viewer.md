@@ -43,6 +43,11 @@ framework-free helpers (sniffing, watching, etc.), keep your `[package.metadata.
 for `cargo-packager`, and add the crate to `[workspace] members`. Do **not** pull it into the Tauri
 shared frontend packages.
 
+For the UI, depend on `window-egui` and call `window_egui::install(&cc.egui_ctx)` in `new`. Build
+the chrome from its widgets (`Toolbar`, `empty_state`, `outdated_badge`, `toggle_button`, …) and
+take colours from `window_egui::palette(ui)`, never hardcoded `Color32`s — the egui counterpart of
+`@window/ui` and the `--vw-*` tokens.
+
 - **CI** (`.github/workflows/ci.yml`): add a `paths-filter` entry and a matrix row with
   `"deps":"egui","web":""` (see the `image-shutter` / `drawing-paner` lines).
 - **Release** (`.github/workflows/release-egui.yml`): add the crate name to the `app:` matrix list.

@@ -1282,6 +1282,7 @@ dependencies = [
  "toml 1.1.8+spec-1.1.0",
  "two-face",
  "window-core",
+ "window-egui",
 ]
 
 [[package]]
@@ -1868,6 +1869,7 @@ dependencies = [
  "egui",
  "rfd 0.17.2",
  "window-core",
+ "window-egui",
 ]
 
 [[package]]
@@ -3567,6 +3569,7 @@ dependencies = [
  "tiny-skia 0.12.0",
  "usvg",
  "window-core",
+ "window-egui",
 ]
 
 [[package]]
@@ -4276,6 +4279,7 @@ dependencies = [
  "threemf",
  "tobj",
  "window-core",
+ "window-egui",
 ]
 
 [[package]]
@@ -7663,6 +7667,7 @@ dependencies = [
  "rfd 0.17.2",
  "sha2 0.10.9",
  "window-core",
+ "window-egui",
 ]
 
 [[package]]
@@ -9649,6 +9654,13 @@ version = "0.1.8"
 dependencies = [
  "notify",
  "notify-debouncer-mini",
+]
+
+[[package]]
+name = "window-egui"
+version = "0.1.8"
+dependencies = [
+ "egui",
 ]
 
 [[package]]

@@ -75,8 +75,6 @@ pub struct ConfigLintelApp {
     error: Option<String>,
     /// Status of the last save / tree edit, shown in the toolbar.
     status: Option<String>,
-    /// The window title last sent, so it is only re-sent when it changes.
-    title: String,
     /// Path of the loaded file, used to save and reload.
     current_path: Option<PathBuf>,
     /// Set by the file watcher (on its own thread) when the file changes on disk.
@@ -89,6 +87,7 @@ pub struct ConfigLintelApp {
 
 impl ConfigLintelApp {
     pub fn new(cc: &eframe::CreationContext<'_>, initial_file: Option<PathBuf>) -> Self {
+        window_egui::install(&cc.egui_ctx);
         let mut app = Self {
             text: String::new(),
             saved_text: String::new(),
@@ -104,7 +103,6 @@ impl ConfigLintelApp {
             file_name: String::new(),
             error: None,
             status: None,
-            title: String::new(),
             current_path: None,
             outdated: Arc::new(AtomicBool::new(false)),
             _watch: None,
@@ -383,16 +381,7 @@ impl eframe::App for ConfigLintelApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
 
-        let title = if self.file_name.is_empty() {
-            "Config Lintel".to_owned()
-        } else {
-            let mark = if self.dirty() { "● " } else { "" };
-            format!("{mark}{} — Config Lintel", self.file_name)
-        };
-        if title != self.title {
-            ctx.send_viewport_cmd(ViewportCommand::Title(title.clone()));
-            self.title = title;
-        }
+        window_egui::set_title(&ctx, "Config Lintel", &self.file_name, self.dirty());
 
         self.handle_shortcuts(&ctx);
         self.show_confirm(&ctx);
@@ -400,11 +389,19 @@ impl eframe::App for ConfigLintelApp {
         self.show_status_bar(ui);
 
         if let Some(err) = &self.error {
-            egui::CentralPanel::default().show(ui, |ui| {
-                ui.centered_and_justified(|ui| {
-                    ui.colored_label(Color32::LIGHT_RED, format!("⚠  {err}"));
-                });
-            });
+            let open = egui::CentralPanel::default()
+                .show(ui, |ui| {
+                    window_egui::empty_state(
+                        ui,
+                        "Open a config file",
+                        "Open a TOML, YAML, XML or JSON file",
+                        Some(err),
+                    )
+                })
+                .inner;
+            if open {
+                self.request_open();
+            }
             return;
         }
 
@@ -489,129 +486,116 @@ impl ConfigLintelApp {
     }
 
     fn show_toolbar(&mut self, ui: &mut egui::Ui) {
-        egui::Panel::top("toolbar").show(ui, |ui| {
-            let row_h = ui.spacing().interact_size.y + 8.0;
-            ui.set_min_height(row_h);
-            ui.set_max_height(row_h);
-            ui.columns(3, |cols| {
-                // Left — current file name, unsaved / outdated markers.
-                cols[0].with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                    if self.file_name.is_empty() {
-                        ui.add(egui::Label::new(RichText::new("Untitled").weak()).truncate());
-                    } else {
-                        ui.add(egui::Label::new(&self.file_name).truncate());
-                    }
-                    if self.dirty() {
-                        ui.label(RichText::new("unsaved").small().weak());
-                    }
-                    if self.current_path.is_some() && self.outdated.load(Ordering::Relaxed) {
-                        let pill = egui::Button::new(
-                            RichText::new("outdated")
-                                .small()
-                                .strong()
-                                .color(Color32::from_rgb(0xb9, 0x1c, 0x1c)),
-                        )
-                        .small()
-                        .fill(Color32::from_rgb(0xfe, 0xe2, 0xe2));
-                        let hint = if self.dirty() {
-                            "File changed on disk — click to reload and discard your edits"
-                        } else {
-                            "File changed on disk — click to reload"
-                        };
-                        if ui.add(pill).on_hover_text(hint).clicked() {
-                            self.reload();
+        window_egui::Toolbar::show(ui, |bar| {
+            // Current file name, unsaved / outdated markers.
+            bar.start(|ui| {
+                let name = if self.file_name.is_empty() {
+                    "Untitled"
+                } else {
+                    &self.file_name
+                };
+                window_egui::file_label(ui, name);
+                if self.dirty() {
+                    window_egui::meta_label(ui, "unsaved");
+                }
+                if self.current_path.is_some()
+                    && self.outdated.load(Ordering::Relaxed)
+                    && window_egui::outdated_badge(ui, self.dirty())
+                {
+                    self.reload();
+                }
+            });
+
+            bar.center(|ui| {
+                window_egui::filter_field(ui, &mut self.filter, "Filter keys and values");
+            });
+
+            // Open, save, convert, format.
+            bar.end(|ui| {
+                if ui.button("Open").clicked() {
+                    self.request_open();
+                }
+                if ui
+                    .add_enabled(self.dirty(), egui::Button::new("Save"))
+                    .on_hover_text("Ctrl/Cmd+S · Shift for Save As")
+                    .clicked()
+                {
+                    self.save();
+                }
+
+                let valid = self.parse_error.is_none();
+                ui.add_enabled_ui(valid, |ui| {
+                    ui.menu_button("Convert", |ui| {
+                        for f in Format::ALL {
+                            if f != self.format && ui.button(f.name()).clicked() {
+                                self.convert(f);
+                            }
                         }
-                    }
+                    })
+                    .response
+                    .on_hover_text("Rewrite the document in another format")
+                    .on_disabled_hover_text("Fix the parse error first");
                 });
 
-                // Center — tree filter.
-                cols[1].vertical_centered(|ui| {
-                    ui.add(
-                        egui::TextEdit::singleline(&mut self.filter)
-                            .hint_text("🔍 Filter keys and values")
-                            .desired_width(f32::INFINITY),
-                    );
-                });
-
-                // Right — open, save, convert, format.
-                cols[2].with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("📂 Open").clicked() {
-                        self.request_open();
-                    }
-                    if ui
-                        .add_enabled(self.dirty(), egui::Button::new("💾 Save"))
-                        .on_hover_text("Ctrl/Cmd+S · Shift for Save As")
-                        .clicked()
-                    {
-                        self.save();
-                    }
-
-                    let valid = self.parse_error.is_none();
-                    ui.add_enabled_ui(valid, |ui| {
-                        ui.menu_button("⇄ Convert", |ui| {
-                            for f in Format::ALL {
-                                if f != self.format && ui.button(f.name()).clicked() {
-                                    self.convert(f);
-                                }
-                            }
-                        })
-                        .response
-                        .on_hover_text("Rewrite the document in another format")
-                        .on_disabled_hover_text("Fix the parse error first");
-                    });
-
-                    // Which parser reads the text (doesn't change the text).
-                    let before = self.format;
-                    egui::ComboBox::from_id_salt("format")
-                        .selected_text(self.format.name())
-                        .width(64.0)
-                        .show_ui(ui, |ui| {
-                            for f in Format::ALL {
-                                ui.selectable_value(&mut self.format, f, f.name());
-                            }
-                        })
-                        .response
-                        .on_hover_text("Parse the text as…");
-                    if self.format != before {
-                        self.reparse();
-                    }
-                });
+                // Which parser reads the text (doesn't change the text).
+                let before = self.format;
+                egui::ComboBox::from_id_salt("format")
+                    .selected_text(self.format.name())
+                    .width(64.0)
+                    .show_ui(ui, |ui| {
+                        for f in Format::ALL {
+                            ui.selectable_value(&mut self.format, f, f.name());
+                        }
+                    })
+                    .response
+                    .on_hover_text("Parse the text as…");
+                if self.format != before {
+                    self.reparse();
+                }
             });
         });
     }
 
     fn show_status_bar(&mut self, ui: &mut egui::Ui) {
-        egui::Panel::bottom("status").show(ui, |ui| {
-            ui.horizontal(|ui| {
-                match &self.parse_error {
-                    Some(e) => {
-                        // Parser messages can span lines (TOML quotes the source); show the first.
-                        let first = e.lines().next().unwrap_or_default();
-                        ui.add(
-                            egui::Label::new(
-                                RichText::new(format!("⚠ {first}")).color(Color32::LIGHT_RED),
+        let p = window_egui::palette(ui);
+        egui::Panel::bottom("status")
+            .frame(
+                egui::Frame::new()
+                    .fill(p.surface)
+                    .inner_margin(egui::Margin::symmetric(12, 4)),
+            )
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    match &self.parse_error {
+                        Some(e) => {
+                            // Parser messages can span lines (TOML quotes the source); show the first.
+                            let first = e.lines().next().unwrap_or_default();
+                            ui.add(
+                                egui::Label::new(
+                                    RichText::new(format!("⚠ {first}")).color(p.danger),
+                                )
+                                .truncate(),
                             )
-                            .truncate(),
-                        )
-                        .on_hover_text(RichText::new(e).monospace());
+                            .on_hover_text(RichText::new(e).monospace());
+                        }
+                        None => {
+                            let docs = match self.tree.len() {
+                                1 => String::new(),
+                                n => format!(" · {n} documents"),
+                            };
+                            ui.label(
+                                RichText::new(format!("✔ Valid {}{docs}", self.format.name()))
+                                    .weak(),
+                            );
+                        }
                     }
-                    None => {
-                        let docs = match self.tree.len() {
-                            1 => String::new(),
-                            n => format!(" · {n} documents"),
-                        };
-                        ui.label(
-                            RichText::new(format!("✔ Valid {}{docs}", self.format.name())).weak(),
-                        );
-                    }
-                }
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if let Some(status) = &self.status {
-                        ui.label(RichText::new(status).small().weak());
-                    }
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if let Some(status) = &self.status {
+                            window_egui::meta_label(ui, status);
+                        }
+                    });
                 });
             });
-        });
     }
 
     fn show_editor(&mut self, ui: &mut egui::Ui) {
@@ -660,7 +644,7 @@ impl ConfigLintelApp {
             } else {
                 "showing last valid parse"
             };
-            ui.label(RichText::new(note).small().weak()).on_hover_text(
+            window_egui::meta_label(ui, note).on_hover_text(
                 "Edits here regenerate the source text, so comments and formatting are not kept.",
             );
         });
@@ -901,16 +885,16 @@ impl TreeView<'_> {
         response.context_menu(|ui| {
             if self.editable {
                 if let Label::Key(k) = label
-                    && ui.button("✏ Rename").clicked()
+                    && ui.button("Rename").clicked()
                 {
                     self.actions
                         .push(Action::StartEdit(path.to_vec(), Field::Key, k.to_owned()));
                 }
-                if !node.is_container() && ui.button("✏ Edit value").clicked() {
+                if !node.is_container() && ui.button("Edit value").clicked() {
                     self.actions
                         .push(Action::StartEdit(path.to_vec(), Field::Value, node.text()));
                 }
-                if node.is_container() && ui.button("➕ Add child").clicked() {
+                if node.is_container() && ui.button("Add child").clicked() {
                     self.actions.push(Action::AddChild(path.to_vec()));
                 }
                 ui.menu_button("Change type", |ui| {

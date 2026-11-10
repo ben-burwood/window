@@ -16,6 +16,7 @@ workspace = true
 
 [dependencies]
 window-core = { workspace = true }
+window-egui = { workspace = true }
 eframe = { workspace = true }
 egui = { workspace = true }
 # syntect highlighting; two-face adds the syntaxes syntect's defaults lack (TOML). Both use the

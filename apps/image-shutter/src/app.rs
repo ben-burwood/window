@@ -2,7 +2,7 @@
 //! fit), a transparency checkerboard (or optional white background) and
 //! on-demand SVG rasterization.
 
-use egui::{Color32, Rect, Sense, TextureHandle, TextureOptions, Vec2, ViewportCommand};
+use egui::{Color32, Rect, Sense, TextureHandle, TextureOptions, Vec2};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -33,8 +33,6 @@ pub struct ImageShutterApp {
     /// Fit-to-window is deferred to the first frame after a load, when the
     /// panel size is known.
     fit_pending: bool,
-    /// Set after a load so the window title is refreshed once next frame.
-    title_dirty: bool,
     /// When true, paint a solid white background instead of the transparency checkerboard.
     white_bg: bool,
     /// Path of the loaded file, used to reload.
@@ -49,6 +47,7 @@ pub struct ImageShutterApp {
 
 impl ImageShutterApp {
     pub fn new(cc: &eframe::CreationContext<'_>, initial_file: Option<PathBuf>) -> Self {
+        window_egui::install(&cc.egui_ctx);
         let mut app = Self {
             svg: None,
             texture: None,
@@ -58,7 +57,6 @@ impl ImageShutterApp {
             zoom: 1.0,
             offset: Vec2::ZERO,
             fit_pending: false,
-            title_dirty: true,
             white_bg: false,
             current_path: None,
             outdated: Arc::new(AtomicBool::new(false)),
@@ -83,7 +81,6 @@ impl ImageShutterApp {
                 self.zoom = 1.0;
                 self.offset = Vec2::ZERO;
                 self.fit_pending = true;
-                self.title_dirty = true;
                 self.current_path = Some(path.to_path_buf());
                 self.start_watch(path);
             }
@@ -92,7 +89,6 @@ impl ImageShutterApp {
                 self.svg = None;
                 self.texture = None;
                 self.file_name = window_core::file_name(path);
-                self.title_dirty = true;
                 self.current_path = None;
                 self._watch = None;
             }
@@ -153,104 +149,60 @@ impl eframe::App for ImageShutterApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
 
-        if self.title_dirty {
-            let title = if self.file_name.is_empty() {
-                "Image Shutter".to_owned()
-            } else {
-                format!("{} — Image Shutter", self.file_name)
-            };
-            ctx.send_viewport_cmd(ViewportCommand::Title(title));
-            self.title_dirty = false;
-        }
-
+        window_egui::set_title(&ctx, "Image Shutter", &self.file_name, false);
         self.handle_shortcuts(&ctx);
 
-        egui::Panel::top("toolbar").show(ui, |ui| {
-            // Pin the bar to a single row. Without this, `columns` hands each
-            // column the panel's full remaining height and the vertically
-            // centered content stretches the toolbar down the window.
-            let row_h = ui.spacing().interact_size.y + 8.0;
-            ui.set_min_height(row_h);
-            ui.set_max_height(row_h);
-            // Three sections: filename (left), zoom controls (center),
-            // Open button (right).
-            ui.columns(3, |cols| {
-                // Left — current file name.
-                cols[0].with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                    if self.file_name.is_empty() {
-                        ui.add(
-                            egui::Label::new(egui::RichText::new("No file open").weak()).truncate(),
-                        );
-                    } else {
-                        ui.add(egui::Label::new(&self.file_name).truncate());
-                    }
-                    if self.svg.is_some() && self.outdated.load(Ordering::Relaxed) {
-                        let pill = egui::Button::new(
-                            egui::RichText::new("outdated")
-                                .small()
-                                .strong()
-                                .color(Color32::from_rgb(0xb9, 0x1c, 0x1c)),
-                        )
-                        .small()
-                        .fill(Color32::from_rgb(0xfe, 0xe2, 0xe2));
-                        if ui
-                            .add(pill)
-                            .on_hover_text("File changed on disk — click to reload")
-                            .clicked()
-                        {
-                            self.reload();
-                        }
+        if self.svg.is_some() {
+            window_egui::Toolbar::show(ui, |bar| {
+                bar.start(|ui| {
+                    window_egui::file_label(ui, &self.file_name);
+                    if self.outdated.load(Ordering::Relaxed)
+                        && window_egui::outdated_badge(ui, false)
+                    {
+                        self.reload();
                     }
                 });
-
-                // Center — zoom controls. Clicking the percentage resets to 100%.
-                let has_image = self.svg.is_some();
-                cols[1].vertical_centered(|ui| {
-                    ui.add_enabled_ui(has_image, |ui| {
-                        ui.horizontal(|ui| {
-                            if ui.button("Fit").clicked() {
-                                self.fit_pending = true;
-                            }
-                            if ui.button("−").clicked() {
-                                self.zoom = (self.zoom / 1.25).clamp(MIN_ZOOM, MAX_ZOOM);
-                            }
-                            if ui
-                                .button(format!("{:.0}%", self.zoom * 100.0))
-                                .on_hover_text("Reset to 100%")
-                                .clicked()
-                            {
-                                self.zoom = 1.0;
-                                self.offset = Vec2::ZERO;
-                            }
-                            if ui.button("+").clicked() {
-                                self.zoom = (self.zoom * 1.25).clamp(MIN_ZOOM, MAX_ZOOM);
-                            }
-                        });
-                    });
+                // Zoom controls. Clicking the percentage resets to 100%.
+                bar.center(|ui| {
+                    if ui.button("Fit").clicked() {
+                        self.fit_pending = true;
+                    }
+                    if ui.button("−").clicked() {
+                        self.zoom = (self.zoom / 1.25).clamp(MIN_ZOOM, MAX_ZOOM);
+                    }
+                    if ui
+                        .button(format!("{:.0}%", self.zoom * 100.0))
+                        .on_hover_text("Reset to 100%")
+                        .clicked()
+                    {
+                        self.zoom = 1.0;
+                        self.offset = Vec2::ZERO;
+                    }
+                    if ui.button("+").clicked() {
+                        self.zoom = (self.zoom * 1.25).clamp(MIN_ZOOM, MAX_ZOOM);
+                    }
                 });
-
-                // Right — open a file and toggle the background fill.
-                cols[2].with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("📂 Open").clicked() {
+                bar.end(|ui| {
+                    if ui.button("Open").clicked() {
                         self.open_dialog();
                     }
-                    ui.toggle_value(&mut self.white_bg, "⬜ White")
+                    window_egui::toggle_button(ui, &mut self.white_bg, "White")
                         .on_hover_text("Fill the background white instead of showing transparency");
                 });
             });
-        });
+        }
 
         egui::CentralPanel::default().show(ui, |ui| {
-            if let Some(err) = &self.error {
-                ui.centered_and_justified(|ui| {
-                    ui.colored_label(Color32::LIGHT_RED, format!("⚠  {err}"));
-                });
-                return;
-            }
             if self.svg.is_none() {
-                ui.centered_and_justified(|ui| {
-                    ui.label("Open an SVG (Ctrl/Cmd+O) to get started.");
-                });
+                let open = window_egui::empty_state(
+                    ui,
+                    "Open an image",
+                    "Open an SVG or SVGZ file to get started",
+                    self.error.as_deref(),
+                );
+                if open {
+                    self.open_dialog();
+                }
                 return;
             }
             self.show_canvas(ui, &ctx);

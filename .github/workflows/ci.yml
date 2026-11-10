@@ -58,6 +58,7 @@ jobs:
           if changed shared; then
             add '{"crate":"window-core","deps":"none","web":""}'
             add '{"crate":"window-tauri","deps":"webkit","web":""}'
+            add '{"crate":"window-egui","deps":"egui","web":""}'
           fi
           echo "rust={\"include\":$rust}" >> "$GITHUB_OUTPUT"
 

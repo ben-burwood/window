@@ -1,4 +1,3 @@
-use egui::{Color32, ViewportCommand};
 use egui_extras::{Column, TableBuilder};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -60,8 +59,6 @@ pub struct SshSillApp {
     /// True when there are unsaved edits.
     dirty: bool,
     add: Option<AddForm>,
-    /// Set after a load / edit so the window title is refreshed once next frame.
-    title_dirty: bool,
     /// Path of the loaded file, used to save and reload.
     current_path: Option<PathBuf>,
     /// Set by the file watcher (on its own thread) when the file changes on disk.
@@ -74,6 +71,7 @@ pub struct SshSillApp {
 
 impl SshSillApp {
     pub fn new(cc: &eframe::CreationContext<'_>, initial_file: Option<PathBuf>) -> Self {
+        window_egui::install(&cc.egui_ctx);
         let mut app = Self {
             hosts: None,
             file_name: String::new(),
@@ -82,7 +80,6 @@ impl SshSillApp {
             filter: String::new(),
             dirty: false,
             add: None,
-            title_dirty: true,
             current_path: None,
             outdated: Arc::new(AtomicBool::new(false)),
             _watch: None,
@@ -99,7 +96,6 @@ impl SshSillApp {
     fn load(&mut self, path: &Path) {
         self.outdated.store(false, Ordering::Relaxed);
         self.file_name = window_core::file_name(path);
-        self.title_dirty = true;
         self.dirty = false;
         self.status = None;
         match KnownHosts::load(path) {
@@ -153,7 +149,6 @@ impl SshSillApp {
         match hosts.save(path) {
             Ok(()) => {
                 self.dirty = false;
-                self.title_dirty = true;
                 self.status = Some("Saved".into());
                 // Our own write trips the watcher; that's not an outside change.
                 self.start_watch(&path.clone());
@@ -165,7 +160,6 @@ impl SshSillApp {
 
     fn mark_dirty(&mut self) {
         self.dirty = true;
-        self.title_dirty = true;
         self.status = None;
     }
 }
@@ -174,101 +168,60 @@ impl eframe::App for SshSillApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
 
-        if self.title_dirty {
-            let title = if self.file_name.is_empty() {
-                "SSH Sill".to_owned()
-            } else {
-                let mark = if self.dirty { "● " } else { "" };
-                format!("{mark}{} — SSH Sill", self.file_name)
-            };
-            ctx.send_viewport_cmd(ViewportCommand::Title(title));
-            self.title_dirty = false;
-        }
-
+        window_egui::set_title(&ctx, "SSH Sill", &self.file_name, self.dirty);
         self.handle_shortcuts(&ctx);
 
-        egui::Panel::top("toolbar").show(ui, |ui| {
-            let row_h = ui.spacing().interact_size.y + 8.0;
-            ui.set_min_height(row_h);
-            ui.set_max_height(row_h);
-            ui.columns(3, |cols| {
-                // Left — current file name, unsaved / outdated markers.
-                cols[0].with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                    if self.file_name.is_empty() {
-                        ui.add(
-                            egui::Label::new(egui::RichText::new("No file open").weak()).truncate(),
-                        );
-                    } else {
-                        ui.add(egui::Label::new(&self.file_name).truncate());
-                    }
+        if self.hosts.is_some() {
+            window_egui::Toolbar::show(ui, |bar| {
+                // Current file name, unsaved / outdated markers.
+                bar.start(|ui| {
+                    window_egui::file_label(ui, &self.file_name);
                     if self.dirty {
-                        ui.label(egui::RichText::new("unsaved").small().weak());
+                        window_egui::meta_label(ui, "unsaved");
                     } else if let Some(status) = &self.status {
-                        ui.label(egui::RichText::new(status).small().weak());
+                        window_egui::meta_label(ui, status);
                     }
-                    if self.hosts.is_some() && self.outdated.load(Ordering::Relaxed) {
-                        let pill = egui::Button::new(
-                            egui::RichText::new("outdated")
-                                .small()
-                                .strong()
-                                .color(Color32::from_rgb(0xb9, 0x1c, 0x1c)),
-                        )
-                        .small()
-                        .fill(Color32::from_rgb(0xfe, 0xe2, 0xe2));
-                        let hint = if self.dirty {
-                            "File changed on disk — click to reload and discard your edits"
-                        } else {
-                            "File changed on disk — click to reload"
-                        };
-                        if ui.add(pill).on_hover_text(hint).clicked() {
-                            self.reload();
-                        }
+                    if self.outdated.load(Ordering::Relaxed)
+                        && window_egui::outdated_badge(ui, self.dirty)
+                    {
+                        self.reload();
                     }
                 });
-
-                // Center — filter.
-                cols[1].vertical_centered(|ui| {
-                    ui.add_enabled(
-                        self.hosts.is_some(),
-                        egui::TextEdit::singleline(&mut self.filter)
-                            .hint_text("🔍 Filter hosts, types, comments")
-                            .desired_width(f32::INFINITY),
+                bar.center(|ui| {
+                    window_egui::filter_field(
+                        ui,
+                        &mut self.filter,
+                        "Filter hosts, types, comments",
                     );
                 });
-
-                // Right — open, save, add.
-                cols[2].with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("📂 Open").clicked() {
+                bar.end(|ui| {
+                    if ui.button("Open").clicked() {
                         self.open_dialog();
                     }
-                    let loaded = self.hosts.is_some();
                     if ui
-                        .add_enabled(loaded && self.dirty, egui::Button::new("💾 Save"))
+                        .add_enabled(self.dirty, egui::Button::new("Save"))
                         .clicked()
                     {
                         self.save();
                     }
-                    if ui
-                        .add_enabled(loaded, egui::Button::new("➕ Add"))
-                        .clicked()
-                    {
+                    if ui.button("Add").clicked() {
                         self.add = Some(AddForm::new());
                     }
                 });
             });
-        });
+        }
 
         egui::CentralPanel::default().show(ui, |ui| {
-            if let Some(err) = &self.error {
-                ui.centered_and_justified(|ui| {
-                    ui.colored_label(Color32::LIGHT_RED, format!("⚠  {err}"));
-                });
-                return;
-            }
             if self.hosts.is_none() {
-                ui.centered_and_justified(|ui| {
-                    ui.label("Open a known_hosts file (Ctrl/Cmd+O) to get started.");
-                });
+                let open = window_egui::empty_state(
+                    ui,
+                    "Open a known_hosts file",
+                    "Open an SSH known_hosts file to get started",
+                    self.error.as_deref(),
+                );
+                if open {
+                    self.open_dialog();
+                }
                 return;
             }
             self.show_table(ui);
@@ -311,7 +264,7 @@ impl SshSillApp {
         if rows.is_empty() {
             ui.centered_and_justified(|ui| {
                 let msg = if hosts.entries().next().is_none() {
-                    "No hosts yet — click ➕ Add."
+                    "No hosts yet — click Add."
                 } else {
                     "No hosts match the filter."
                 };
@@ -343,7 +296,11 @@ impl SshSillApp {
                     let (index, e) = rows[row.index()];
                     row.col(|ui| {
                         if let Some(m) = e.marker {
-                            ui.label(egui::RichText::new(m.as_str()).small().strong());
+                            let variant = match m {
+                                Marker::Revoked => window_egui::BadgeVariant::Danger,
+                                Marker::CertAuthority => window_egui::BadgeVariant::Default,
+                            };
+                            window_egui::badge(ui, m.as_str(), variant);
                         }
                         let hosts = e.hosts_display();
                         let label = if e.is_hashed() {
@@ -367,7 +324,7 @@ impl SshSillApp {
                     });
                     row.col(|ui| {
                         if ui
-                            .small_button("🗑")
+                            .small_button("✕")
                             .on_hover_text("Remove this host")
                             .clicked()
                         {
@@ -467,12 +424,12 @@ impl SshSillApp {
 
             if let Some(err) = &form.error {
                 ui.add_space(4.0);
-                ui.colored_label(Color32::LIGHT_RED, format!("⚠  {err}"));
+                window_egui::error_text(ui, err);
             }
 
             ui.add_space(8.0);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if ui.button("Add").clicked() {
+                if window_egui::primary_button(ui, "Add").clicked() {
                     submit = true;
                 }
                 if ui.button("Cancel").clicked() {

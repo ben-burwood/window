@@ -3,6 +3,7 @@ resolver = "3"
 members = [
   "crates/window-core",
   "crates/window-tauri",
+  "crates/window-egui",
   "apps/data-framer/src-tauri",
   "apps/map-windower/src-tauri",
   "apps/doc-viewer/src-tauri",
@@ -30,6 +31,7 @@ publish = false
 # Internal
 window-core = { path = "crates/window-core" }
 window-tauri = { path = "crates/window-tauri" }
+window-egui = { path = "crates/window-egui" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # Tauri

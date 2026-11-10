@@ -16,6 +16,7 @@ workspace = true
 
 [dependencies]
 window-core = { workspace = true }
+window-egui = { workspace = true }
 # We render 3D through the glow (OpenGL) backend's paint callback. eframe's
 # default backend in this workspace is wgpu; enabling `glow` here adds the GL
 # backend for this crate. Other apps keep wgpu — when both backends are present

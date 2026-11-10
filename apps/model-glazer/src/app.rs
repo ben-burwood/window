@@ -7,7 +7,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use egui::{Color32, ViewportCommand};
 use egui_glow::glow;
 
 use crate::camera::Camera;
@@ -34,8 +33,6 @@ pub struct ModelGlazerApp {
     error: Option<String>,
     /// Path of the loaded file, used to reload.
     current_path: Option<PathBuf>,
-    /// Set after a load so the window title is refreshed once next frame.
-    title_dirty: bool,
 
     /// Set by the file watcher (on its own thread) when the file changes on disk.
     outdated: Arc<AtomicBool>,
@@ -53,6 +50,7 @@ impl ModelGlazerApp {
             None => Err("No OpenGL context available.".to_string()),
         };
 
+        window_egui::install(&cc.egui_ctx);
         let mut app = Self {
             gl,
             renderer,
@@ -63,7 +61,6 @@ impl ModelGlazerApp {
             file_name: String::new(),
             error: None,
             current_path: None,
-            title_dirty: true,
             outdated: Arc::new(AtomicBool::new(false)),
             _watch: None,
             egui_ctx: cc.egui_ctx.clone(),
@@ -87,7 +84,6 @@ impl ModelGlazerApp {
                 }
                 self.error = None;
                 self.current_path = Some(path.to_path_buf());
-                self.title_dirty = true;
                 self.start_watch(path);
             }
             Err(e) => {
@@ -95,7 +91,6 @@ impl ModelGlazerApp {
                 self.model_aabb = None;
                 self.tri_count = 0;
                 self.file_name = window_core::file_name(path);
-                self.title_dirty = true;
                 self.current_path = None;
                 self._watch = None;
             }
@@ -139,86 +134,49 @@ impl eframe::App for ModelGlazerApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
 
-        if self.title_dirty {
-            let title = if self.file_name.is_empty() {
-                "Model Glazer".to_owned()
-            } else {
-                format!("{} — Model Glazer", self.file_name)
-            };
-            ctx.send_viewport_cmd(ViewportCommand::Title(title));
-            self.title_dirty = false;
-        }
-
+        window_egui::set_title(&ctx, "Model Glazer", &self.file_name, false);
         self.handle_shortcuts(&ctx);
 
-        egui::Panel::top("toolbar").show(ui, |ui| {
-            let row_h = ui.spacing().interact_size.y + 8.0;
-            ui.set_min_height(row_h);
-            ui.set_max_height(row_h);
-            ui.columns(3, |cols| {
-                // Left — current file name + an "outdated" reload pill.
-                cols[0].with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                    if self.file_name.is_empty() {
-                        ui.add(
-                            egui::Label::new(egui::RichText::new("No file open").weak()).truncate(),
-                        );
-                    } else {
-                        ui.add(egui::Label::new(&self.file_name).truncate());
-                        if self.model_aabb.is_some() {
-                            ui.add(
-                                egui::Label::new(
-                                    egui::RichText::new(format!("{} tris", self.tri_count)).weak(),
-                                )
-                                .truncate(),
-                            );
-                        }
+        if self.model_aabb.is_some() {
+            window_egui::Toolbar::show(ui, |bar| {
+                bar.start(|ui| {
+                    window_egui::file_label(ui, &self.file_name);
+                    window_egui::meta_label(ui, format!("{} tris", self.tri_count));
+                    if self.outdated.load(Ordering::Relaxed)
+                        && window_egui::outdated_badge(ui, false)
+                    {
+                        self.reload();
                     }
-                    if self.model_aabb.is_some() && self.outdated.load(Ordering::Relaxed) {
-                        let pill = egui::Button::new(
-                            egui::RichText::new("outdated")
-                                .small()
-                                .strong()
-                                .color(Color32::from_rgb(0xb9, 0x1c, 0x1c)),
-                        )
-                        .small()
-                        .fill(Color32::from_rgb(0xfe, 0xe2, 0xe2));
+                });
+                // Fit + shading toggle.
+                bar.center(|ui| {
+                    if ui
+                        .button("Fit")
+                        .on_hover_text("Frame the model (F)")
+                        .clicked()
+                    {
+                        self.fit();
+                    }
+                    ui.separator();
+                    for (shading, label) in
+                        [(Shading::Solid, "Solid"), (Shading::Wireframe, "Wireframe")]
+                    {
+                        let selected = self.shading == shading;
                         if ui
-                            .add(pill)
-                            .on_hover_text("File changed on disk — click to reload")
+                            .add(egui::Button::new(label).selected(selected))
                             .clicked()
                         {
-                            self.reload();
+                            self.shading = shading;
                         }
                     }
                 });
-
-                // Center — fit + shading toggle.
-                let has_model = self.model_aabb.is_some();
-                cols[1].vertical_centered(|ui| {
-                    ui.add_enabled_ui(has_model, |ui| {
-                        ui.horizontal(|ui| {
-                            if ui
-                                .button("Fit")
-                                .on_hover_text("Frame the model (F)")
-                                .clicked()
-                            {
-                                self.fit();
-                            }
-                            ui.separator();
-                            ui.selectable_value(&mut self.shading, Shading::Solid, "Solid");
-                            ui.selectable_value(&mut self.shading, Shading::Wireframe, "Wireframe");
-                        });
-                    });
-                });
-
-                // Right — open a file.
-                cols[2].with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("📂 Open").clicked() {
+                bar.end(|ui| {
+                    if ui.button("Open").clicked() {
                         self.open_dialog();
                     }
                 });
             });
-        });
+        }
 
         egui::CentralPanel::default().show(ui, |ui| {
             // A broken renderer is fatal for the whole session — surface it first,
@@ -226,23 +184,20 @@ impl eframe::App for ModelGlazerApp {
             // files that can never render.
             if let Err(err) = &self.renderer {
                 ui.centered_and_justified(|ui| {
-                    ui.colored_label(
-                        Color32::LIGHT_RED,
-                        format!("⚠  3D rendering unavailable: {err}"),
-                    );
-                });
-                return;
-            }
-            if let Some(err) = &self.error {
-                ui.centered_and_justified(|ui| {
-                    ui.colored_label(Color32::LIGHT_RED, format!("⚠  {err}"));
+                    window_egui::error_text(ui, format!("3D rendering unavailable: {err}"));
                 });
                 return;
             }
             if self.model_aabb.is_none() {
-                ui.centered_and_justified(|ui| {
-                    ui.label("Open a 3D model (Ctrl/Cmd+O) — STL, OBJ, or 3MF.");
-                });
+                let open = window_egui::empty_state(
+                    ui,
+                    "Open a 3D model",
+                    "Open an STL, OBJ or 3MF file to get started",
+                    self.error.as_deref(),
+                );
+                if open {
+                    self.open_dialog();
+                }
                 return;
             }
             self.show_canvas(ui);
