@@ -10,10 +10,11 @@ members = [
   "apps/drawing-paner",
   "apps/model-glazer",
   "apps/ssh-sill",
+  "apps/config-lintel",
 ]
 
 [workspace.package]
-version = "0.1.7"
+version = "0.1.8"
 edition = "2024"
 rust-version = "1.99"
 license = "MIT"

@@ -1,8 +1,8 @@
 # window
 
-A monorepo for seven small desktop applications that share a framework-free Rust core and (for the Tauri apps) shared frontend packages.
+A monorepo for eight small desktop applications that share a framework-free Rust core and (for the Tauri apps) shared frontend packages.
 
-**One repo, one lockfile, one toolchain, seven independently-built binaries.**
+**One repo, one lockfile, one toolchain, eight independently-built binaries.**
 
 | App             | Format        | Stack                                        |
 | --------------- | ------------- | -------------------------------------------- |
@@ -13,16 +13,17 @@ A monorepo for seven small desktop applications that share a framework-free Rust
 | `drawing-paner` | DXF           | egui / eframe + dxf (cargo-packager)         |
 | `model-glazer`  | STL/OBJ/3MF   | egui / eframe + glow 3D (cargo-packager)     |
 | `ssh-sill`      | known_hosts   | egui / eframe + egui_extras (cargo-packager) |
+| `config-lintel` | YAML/TOML/JSON/XML | egui / eframe + egui_extras (cargo-packager) |
 
 ## Layout
 
 ```
 crates/    window-core (pure Rust), window-tauri
 packages/  @window/ui, @window/bridge, @window/config  (consumed by the three Tauri apps)
-apps/      data-framer, map-windower, doc-viewer, image-shutter, drawing-paner, model-glazer, ssh-sill
+apps/      data-framer, map-windower, doc-viewer, image-shutter, drawing-paner, model-glazer, ssh-sill, config-lintel
 ```
 
-The egui apps (`image-shutter`, `drawing-paner`, `model-glazer`, `ssh-sill`) are crates under `apps/`, not
+The egui apps (`image-shutter`, `drawing-paner`, `model-glazer`, `ssh-sill`, `config-lintel`) are crates under `apps/`, not
 `crates/` — they share `window-core` but none of the frontend packages.
 
 ## Toolchain

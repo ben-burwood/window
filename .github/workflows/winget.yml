@@ -36,6 +36,8 @@ jobs:
             id: BenBurwood.ModelGlazer
           - app: ssh-sill
             id: BenBurwood.SshSill
+          - app: config-lintel
+            id: BenBurwood.ConfigLintel
     steps:
       - name: Publish ${{ matrix.app }} update to WinGet
         shell: pwsh

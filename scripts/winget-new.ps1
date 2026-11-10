@@ -35,6 +35,7 @@ $meta = @{
   'drawing-paner' = @{ Id='BenBurwood.DrawingPaner'; Name='Drawing Paner'; Desc='A tiny, fast, native DXF viewer';           Moniker='drawing-paner'; Tags=@('dxf','cad','drawing','viewer') }
   'model-glazer'  = @{ Id='BenBurwood.ModelGlazer';  Name='Model Glazer';  Desc='A tiny, fast, native 3D model viewer';      Moniker='model-glazer';  Tags=@('stl','obj','3mf','3d','viewer') }
   'ssh-sill'      = @{ Id='BenBurwood.SshSill';      Name='SSH Sill';      Desc='A tiny, fast, native SSH known_hosts editor'; Moniker='ssh-sill';      Tags=@('ssh','known-hosts','editor') }
+  'config-lintel' = @{ Id='BenBurwood.ConfigLintel'; Name='Config Lintel'; Desc='A tiny, fast, native YAML / TOML / JSON / XML viewer and editor'; Moniker='config-lintel'; Tags=@('yaml','toml','json','xml','config','editor') }
 }
 
 $publisher  = 'Ben Burwood'

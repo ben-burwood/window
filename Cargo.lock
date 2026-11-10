@@ -1258,6 +1258,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "config-lintel"
+version = "0.1.8"
+dependencies = [
+ "eframe",
+ "egui",
+ "egui_extras",
+ "rfd 0.17.2",
+ "roxmltree 0.21.1",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+ "toml 1.1.8+spec-1.1.0",
+ "window-core",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1568,7 +1584,7 @@ dependencies = [
 
 [[package]]
 name = "data-framer"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "chrono",
  "geozero",
@@ -1782,7 +1798,7 @@ dependencies = [
 
 [[package]]
 name = "doc-viewer"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "serde",
  "serde_json",
@@ -1834,7 +1850,7 @@ dependencies = [
 
 [[package]]
 name = "drawing-paner"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "dxf",
  "eframe",
@@ -3518,7 +3534,7 @@ dependencies = [
 
 [[package]]
 name = "image-shutter"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "eframe",
  "egui",
@@ -4117,7 +4133,7 @@ dependencies = [
 
 [[package]]
 name = "map-windower"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "arrow-array",
  "arrow-json",
@@ -4220,7 +4236,7 @@ dependencies = [
 
 [[package]]
 name = "model-glazer"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "eframe",
  "egui",
@@ -7266,6 +7282,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_yaml_ng"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b4db627b98b36d4203a7b458cf3573730f2bb591b28871d916dfa9efabfd41f"
+dependencies = [
+ "indexmap 2.14.2",
+ "itoa",
+ "ryu",
+ "serde",
+ "unsafe-libyaml",
+]
+
+[[package]]
 name = "serialize-to-javascript"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7596,7 +7625,7 @@ dependencies = [
 
 [[package]]
 name = "ssh-sill"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "base64 0.22.1",
  "eframe",
@@ -8789,6 +8818,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
 
 [[package]]
+name = "unsafe-libyaml"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
+
+[[package]]
 name = "untrusted"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9549,7 +9584,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "window-core"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "notify",
  "notify-debouncer-mini",
@@ -9557,7 +9592,7 @@ dependencies = [
 
 [[package]]
 name = "window-tauri"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "tauri",
  "tauri-plugin-dialog",
