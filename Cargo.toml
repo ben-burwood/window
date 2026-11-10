@@ -17,6 +17,7 @@ version = "0.1.7"
 edition = "2024"
 rust-version = "1.99"
 license = "MIT"
+license-file = "LICENSE"
 authors = ["Ben Burwood"]
 repository = "https://github.com/ben-burwood/window"
 readme = "README.md"
