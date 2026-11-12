@@ -82,6 +82,8 @@ pub struct Source {
     pub path: String,
     /// Decode CSV text with `LossyUtf8` (invalid bytes → U+FFFD)
     pub lossy_utf8: bool,
+    /// Lines to skip before the CSV/TSV header (e.g. a metadata preamble).
+    pub skip_lines: usize,
     /// Parsed `.json` contents. Polars can't scan a JSON array lazily, so the
     /// file is read once and shared by clones of this source.
     json: Arc<OnceLock<DataFrame>>,
@@ -92,6 +94,7 @@ impl Source {
         Self {
             path: path.to_string(),
             lossy_utf8: false,
+            skip_lines: 0,
             json: Arc::default(),
         }
     }
@@ -126,6 +129,7 @@ impl Source {
                 LazyCsvReader::new(path.into())
                     .with_separator(separator_for(ext))
                     .with_encoding(encoding)
+                    .with_skip_lines(self.skip_lines)
                     .finish()
                     .map_err(|e| e.to_string())
             }
@@ -832,6 +836,21 @@ mod tests {
 
             std::fs::remove_file(path).ok();
         }
+    }
+
+    /// `skip_lines` drops a preamble (even one with an unbalanced quote) so the
+    /// header is read from line `n`.
+    #[test]
+    fn csv_skip_lines() {
+        let path = std::env::temp_dir().join("data_framer_skip_test.csv");
+        std::fs::write(&path, "exported by \"tool\n2026-01-01\na,b\n1,x\n2,y\n").unwrap();
+        let mut src = Source::new(path.to_str().unwrap());
+        src.skip_lines = 2;
+
+        let read = src.scan().unwrap().collect().unwrap();
+        assert!(read.equals(&df!["a" => [1i64, 2], "b" => ["x", "y"]].unwrap()));
+
+        std::fs::remove_file(path).ok();
     }
 
     /// A Latin-1 byte deep in a CSV doesn't affect queries that never parse it;

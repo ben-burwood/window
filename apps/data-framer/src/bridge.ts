@@ -30,9 +30,10 @@ export interface GeomFeature {
   idx: number;
 }
 
-/** Open a Parquet/CSV/TSV/JSON file and read its schema + row count. */
-export function loadFile(path: string) {
-  return invoke<FileInfo>("load_file", { path });
+/** Open a Parquet/CSV/TSV/JSON file and read its schema + row count.
+ *  `skipLines` drops that many lines before a CSV/TSV header (ignored for other formats). */
+export function loadFile(path: string, skipLines = 0) {
+  return invoke<FileInfo>("load_file", { path, skipLines });
 }
 
 /** A page of rows for the infinite-scroll grid. */

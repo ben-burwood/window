@@ -37,9 +37,15 @@ fn query<T>(app: &AppHandle, f: impl Fn(&LoadedFile) -> Result<T, String>) -> Re
 
 /// Load a parquet, CSV, TSV, JSON or NDJSON file: reads schema + row count (no data), stores
 /// the file path in managed state, and returns metadata to the frontend.
+/// `skip_lines` drops that many lines before a CSV/TSV header; ignored for other formats.
 #[tauri::command]
-fn load_file(path: String, state: State<'_, AppState>) -> Result<FileInfo, String> {
+fn load_file(
+    path: String,
+    skip_lines: Option<usize>,
+    state: State<'_, AppState>,
+) -> Result<FileInfo, String> {
     let mut source = datastore::Source::new(&path);
+    source.skip_lines = skip_lines.unwrap_or(0);
     let (columns, total_rows) = datastore::with_utf8_fallback(&mut source, |source| {
         let mut lf = source.scan()?;
         let columns = datastore::extract_schema(&mut lf)?;

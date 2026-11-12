@@ -48,6 +48,7 @@ const columnPanelOpen = ref(false);
 const error = ref<string | null>(null);
 const dragging = ref(false);
 const outdated = ref(false);
+const skipLines = ref(0);
 const unlisteners: Array<() => void> = [];
 
 const mapView = ref<{
@@ -83,6 +84,7 @@ const H3_NAMES = ["h3", "h3_index", "h3index", "h3_cell", "h3cell", "h3point"];
 const GEOM_NAMES = ["geometry", "geom", "the_geom", "wkb_geometry", "wkb"];
 
 const fileName = computed(() => fileInfo.value?.path.split(/[\\/]/).pop() ?? "");
+const isDelimited = computed(() => /\.(csv|tsv)$/i.test(fileInfo.value?.path ?? ""));
 
 const latColumn = computed(
   () => fileInfo.value?.columns.find((c) => LAT_NAMES.includes(c.name.toLowerCase()))?.name ?? null,
@@ -139,6 +141,7 @@ async function loadFileByPath(path: string) {
   activeFilters.value = [];
   filteredRowCount.value = 0;
   columnPanelOpen.value = false;
+  skipLines.value = 0;
 
   try {
     const info = await loadFile(path);
@@ -160,7 +163,7 @@ async function rescan() {
   const path = fileInfo.value?.path;
   if (!path || view.value !== "loaded") return;
   try {
-    const info = await loadFile(path);
+    const info = await loadFile(path, skipLines.value);
     fileInfo.value = info;
     // Default any newly-added column to visible; keep existing choices.
     const vis = { ...activeColumnVisibility.value };
@@ -180,6 +183,28 @@ async function rescan() {
     // Transient read (e.g. the editor mid-save): keep the current data and flag it stale.
     outdated.value = true;
   }
+}
+
+// Re-read a CSV/TSV with a different number of preamble lines skipped. The header moves, so
+// columns may change: filters and column visibility reset. On failure the previous count is kept.
+async function onSkipLinesChange(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const n = input.valueAsNumber;
+  const path = fileInfo.value?.path;
+  if (path && Number.isInteger(n) && n >= 0 && n !== skipLines.value) {
+    try {
+      const info = await loadFile(path, n);
+      skipLines.value = n;
+      activeFilters.value = [];
+      filteredRowCount.value = 0;
+      fileInfo.value = info;
+      initColumnVisibility();
+    } catch (err) {
+      alert(`Could not skip ${n} lines:\n${err}`);
+    }
+  }
+  // Snap invalid or failed input back to the value actually in effect.
+  input.value = String(skipLines.value);
 }
 
 // Single deduped entry point: every source (dialog, startup, drop, onOpenFile)
@@ -301,6 +326,16 @@ function onColumnsReset() {
           </template>
           <template v-else> {{ fileInfo!.total_rows.toLocaleString() }} rows </template>
         </span>
+        <label v-if="isDelimited" class="skip-lines" title="Lines to skip before the header row">
+          Skip
+          <input
+            type="number"
+            min="0"
+            step="1"
+            :value="skipLines"
+            @change="onSkipLinesChange"
+          />
+        </label>
       </template>
 
       <template #center>
@@ -446,6 +481,30 @@ function onColumnsReset() {
   color: var(--vw-fg-muted);
   font-size: var(--vw-fs-sm);
   white-space: nowrap;
+}
+
+.skip-lines {
+  display: flex;
+  align-items: center;
+  gap: var(--vw-space-1);
+  color: var(--vw-fg-muted);
+  font-size: var(--vw-fs-sm);
+  white-space: nowrap;
+}
+
+.skip-lines input {
+  width: 4.5em;
+  padding: 2px var(--vw-space-1);
+  font: inherit;
+  color: var(--vw-fg);
+  background: var(--vw-bg);
+  border: 1px solid var(--vw-border);
+  border-radius: var(--vw-radius-sm);
+}
+
+.skip-lines input:focus {
+  outline: none;
+  border-color: var(--vw-accent);
 }
 
 .view-toggle {
